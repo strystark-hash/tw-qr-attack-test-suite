@@ -3,235 +3,375 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>TW Attack — Agent Portal</title>
+<title>TW Attack — Agent System</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,'Segoe UI',system-ui,sans-serif}
-:root{--bg:#0d1117;--surface:#161b22;--border:#30363d;--text:#e6edf3;--muted:#8b949e}
-body{background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden}
-
+:root{--bg:#0d1117;--sf:#161b22;--bd:#30363d;--tx:#e6edf3;--mu:#8b949e;--dim:#484f58;--bl:#58a6ff}
+body{background:var(--bg);color:var(--tx);display:flex;height:100vh;overflow:hidden}
 .app{display:flex;height:100vh;width:100vw}
-.sidebar{width:200px;min-width:200px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:10}
-.sidebar h1{font-size:14px;padding:16px 16px 12px;border-bottom:1px solid #21262d}
-.nav-item{display:flex;align-items:center;gap:8px;padding:9px 16px;cursor:pointer;font-size:13px;color:var(--muted);border-left:3px solid transparent;background:none;width:100%;text-align:left}
-.nav-item:hover{background:#1c2128;color:var(--text)}
-.nav-item._a{color:var(--text);border-left-color:#58a6ff;background:#1c2128}
-.nav-item .ic{font-size:15px;width:20px}
-
+.sidebar{width:210px;min-width:210px;background:var(--sf);border-right:1px solid var(--bd);display:flex;flex-direction:column;z-index:10}
+.sidebar h1{font-size:13px;padding:14px 16px 10px;border-bottom:1px solid #21262d;letter-spacing:-.2px}
+.sh{font-size:9px;color:var(--dim);padding:10px 16px 3px;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 16px;cursor:pointer;font-size:12px;color:var(--mu);border-left:3px solid transparent;background:none;width:100%;text-align:left}
+.nav-item:hover{background:#1c2128;color:var(--tx)}
+.nav-item._a{color:var(--tx);border-left-color:var(--bl);background:#1c2128}
+.nav-item .ic{font-size:14px;width:18px}
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .pnl{display:none;height:100%;overflow:hidden;flex-direction:column}
 .pnl._a{display:flex}
-.pnl-hd{padding:14px 20px;border-bottom:1px solid #21262d;font-size:14px;font-weight:600;flex-shrink:0}
-.pnl-bd{flex:1;overflow-y:auto;padding:12px 20px}
+.ph{padding:12px 20px;border-bottom:1px solid #21262d;font-size:14px;font-weight:600;flex-shrink:0}
+.pb{flex:1;overflow-y:auto;padding:10px 16px}
 
-.chat-box{flex:1;overflow-y:auto;padding:8px 0}
-.msg{margin-bottom:10px}
-.msg .nm{font-size:10px;color:var(--muted);margin-bottom:2px}
-.msg .b{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;line-height:1.5;display:inline-block;max-width:88%}
+/* Chat */
+.cb{flex:1;overflow-y:auto;padding:6px 0}
+.msg{margin-bottom:8px}
+.msg .nm{font-size:10px;color:var(--mu);margin-bottom:1px}
+.msg .b{background:var(--sf);border:1px solid var(--bd);border-radius:7px;padding:7px 10px;font-size:12px;line-height:1.5;display:inline-block;max-width:88%}
 .msg.y .b{background:#1f6feb22;border-color:#1f6feb44}
-.cbar{display:flex;gap:6px;border-top:1px solid #21262d;padding:10px 0;flex-shrink:0}
-.cbar input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;outline:none}
-.cbar input:focus{border-color:#58a6ff}
-.cbar button{background:#238636;border:none;border-radius:6px;color:#fff;padding:0 14px;font-size:12px;font-weight:600;cursor:pointer}
+.cbar{display:flex;gap:5px;border-top:1px solid #21262d;padding:8px 0;flex-shrink:0}
+.cbar input{flex:1;background:var(--bg);border:1px solid var(--bd);border-radius:5px;padding:7px 10px;color:var(--tx);font-size:12px;outline:none}
+.cbar input:focus{border-color:var(--bl)}
+.cbar button{background:#238636;border:none;border-radius:5px;color:#fff;padding:0 12px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap}
+.cbar .cb2{background:#21262d;color:var(--mu)}.cbar .cb2:hover{background:#30363d;color:var(--tx)}
 .cbar button:hover{background:#2ea043}
-.cb{background:#21262d;color:var(--muted)}
-.cb:hover{background:#30363d;color:var(--text)}
 
-.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px}
-.tc{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px;cursor:pointer;transition:all.1s;font-size:12px;border:none;color:var(--text);text-align:left;width:100%}
-.tc:hover{border-color:#58a6ff}
-.tc .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px}
+/* Tests */
+.tg{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:6px}
+.tc{background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:9px;cursor:pointer;font-size:11px;border:none;color:var(--tx);text-align:left;width:100%}
+.tc:hover{border-color:var(--bl)}
+.tc .dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px}
 .dr{background:#da3633}.dy{background:#d29922}.dg{background:#484f58}
-.tc .st{font-size:10px;color:var(--muted);margin-top:2px}
-
-.tvw{display:none;margin-top:12px;flex-direction:column;flex:1}
-.tvw._a{display:flex}
-.tvw-hd{display:flex;gap:10px;align-items:center;margin-bottom:8px}
-.tvw-body{display:flex;gap:12px;height:calc(100vh - 270px)}
-.tside{width:220px;min-width:220px;overflow-y:auto}
-.tside .inst{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:12px;line-height:1.6}
-.tside .inst h3{font-size:13px;margin-bottom:6px;color:#58a6ff}
-.tside .inst li{margin-bottom:4px;padding-left:12px}
-.tside .inst code{background:#21262d;padding:1px 4px;border-radius:3px;font-size:11px}
-.tiframe{flex:1;border:1px solid var(--border);border-radius:8px;overflow:hidden}
-.tiframe iframe{width:100%;height:100%;border:none;background:#fff}
-
-.dh{display:flex;align-items:center;gap:6px;cursor:pointer;padding:8px 0;font-size:13px;font-weight:600;color:var(--text);border:none;background:none;width:100%;text-align:left}
-.dh .ar{font-size:9px;color:var(--muted);transition:transform.15s;display:inline-block}
-.dh .ar._o{transform:rotate(90deg)}
-.db{padding:4px 0 10px 14px;display:none;font-size:12px;color:var(--muted);line-height:1.6}
-.db._o{display:block}
-
-.step{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #21262d}
-.step:last-child{border:none}
-.sn{width:24px;height:24px;background:#1f6feb;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
-
-code{background:#21262d;padding:1px 5px;border-radius:3px;font-size:12px}
-.bl{display:block;background:var(--bg);border:1px solid var(--border);padding:8px 10px;border-radius:5px;margin:4px 0;font-size:11px;word-break:break-all}
-.fd{border-left:3px solid #58a6ff;padding:8px 12px;margin-bottom:8px;font-size:12px;background:#1c2128;border-radius:0 6px 6px 0}
-a{color:#58a6ff;text-decoration:none}
-.pr{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
-.pr1{display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600}
+.tc .st{font-size:9px;color:var(--mu);margin-top:1px}
+.pr{display:flex;gap:4px;flex-wrap:wrap;margin:6px 0 8px}
+.pr1{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600}
 .bg1{background:#238636;color:#fff}.bg2{background:#d29922;color:#000}.bg3{background:#484f58;color:#fff}
-.bt{display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:none;color:#fff}
-.bt1{background:#238636}.bt1:hover{background:#2ea043}
-.bt2{background:#1f6feb}.bt2:hover{background:#388bfd}
-.bt3{background:#21262d;color:var(--muted)}.bt3:hover{background:#30363d;color:var(--text)}
-.fd table{width:100%;border-collapse:collapse;font-size:11px;margin-top:4px}
-.fd td,.fd th{padding:3px 6px;text-align:left;border-bottom:1px solid #21262d}
 
-::-webkit-scrollbar{width:5px}
-::-webkit-scrollbar-thumb{background:#30363d;border-radius:3px}
-@media(max-width:700px){.sidebar{width:44px;min-width:44px}.sidebar h1{font-size:0}.sidebar h1::after{content:'TW';font-size:13px}.nav-item span{display:none}}
+/* Test viewer */
+.tvw{display:none;margin-top:10px;flex-direction:column;flex:1}
+.tvw._a{display:flex}
+.tvw-hd{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.tvw-body{display:flex;gap:10px;height:calc(100vh - 260px)}
+.tside{width:200px;min-width:200px;overflow-y:auto;font-size:11px}
+.tside .in{border:1px solid var(--bd);border-radius:6px;padding:10px;background:var(--sf)}
+.tside .in h3{font-size:12px;margin-bottom:4px;color:var(--bl)}
+.tside .in li{margin-bottom:3px;padding-left:10px}
+.tside .in code{background:#21262d;padding:1px 3px;border-radius:2px;font-size:10px}
+.tif{flex:1;border:1px solid var(--bd);border-radius:6px;overflow:hidden}
+.tif iframe{width:100%;height:100%;border:none;background:#fff}
+
+/* Memory/Skills cards */
+.mc{background:var(--sf);border:1px solid var(--bd);border-radius:7px;padding:10px 12px;margin-bottom:8px;font-size:12px;line-height:1.5}
+.mc .mt{font-size:11px;color:var(--bl);font-weight:600;margin-bottom:2px}
+.mc .mm{color:var(--mu)}
+.mc code{background:#21262d;padding:1px 4px;border-radius:2px;font-size:11px}
+.me{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.en{display:inline-block;padding:5px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--bd);background:var(--sf);color:var(--mu);text-align:center;min-width:90px}
+.en:hover{border-color:var(--bl);color:var(--tx)}
+.en._a{border-color:#238636;background:#23863622;color:#3fb950}
+.en._i{border-color:#58a6ff;background:#1f6feb22;color:var(--bl)}
+.mt2{margin-top:4px;font-size:10px;color:var(--mu)}
+
+/* Eyes */
+.eyes-area{display:flex;gap:10px;flex-wrap:wrap}
+.eyes-preview{width:100%;max-width:300px;border:1px solid var(--bd);border-radius:6px;overflow:hidden}
+.eyes-preview img{width:100%;display:block}
+.eyes-gallery{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.eyes-thumb{width:80px;height:80px;border:1px solid var(--bd);border-radius:4px;overflow:hidden;cursor:pointer;position:relative}
+.eyes-thumb img{width:100%;height:100%;object-fit:cover}
+.eyes-thumb .del{position:absolute;top:1px;right:1px;background:#da3633;color:#fff;border:none;border-radius:50%;width:16px;height:16px;font-size:9px;cursor:pointer;line-height:1}
+.btn-eyes{display:inline-block;padding:6px 14px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:none;color:#fff}
+.btn-green{background:#238636}.btn-green:hover{background:#2ea043}
+.btn-blue{background:#1f6feb}.btn-blue:hover{background:#388bfd}
+.btn-gray{background:#21262d;color:var(--mu)}.btn-gray:hover{background:#30363d;color:var(--tx)}
+
+/* Findings */
+.fd{border-left:3px solid var(--bl);padding:8px 10px;margin-bottom:6px;font-size:12px;background:#1c2128;border-radius:0 5px 5px 0}
+.dh{display:flex;align-items:center;gap:5px;cursor:pointer;padding:6px 0;font-size:12px;font-weight:600;color:var(--tx);border:none;background:none;width:100%;text-align:left}
+.dh .ar{font-size:8px;color:var(--mu);display:inline-block;transition:transform.12s}
+.dh .ar._o{transform:rotate(90deg)}
+.db{padding:3px 0 8px 12px;display:none;font-size:11px;color:var(--mu);line-height:1.5}
+.db._o{display:block}
+.fd table{width:100%;border-collapse:collapse;font-size:10px;margin-top:3px}
+.fd td,.fd th{padding:2px 5px;text-align:left;border-bottom:1px solid #21262d}
+
+/* Resume */
+.step{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #21262d;font-size:12px}
+.step:last-child{border:none}
+.sn{width:22px;height:22px;background:#1f6feb;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+code{background:#21262d;padding:1px 4px;border-radius:2px;font-size:11px}
+.bl{display:block;background:var(--bg);border:1px solid var(--bd);padding:6px 8px;border-radius:4px;margin:3px 0;font-size:10px;word-break:break-all}
+a{color:var(--bl);text-decoration:none}
+.bt{display:inline-flex;align-items:center;gap:3px;padding:5px 12px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:none;color:#fff}
+.btg{background:#238636}.btg:hover{background:#2ea043}
+.btb{background:#1f6feb}.btb:hover{background:#388bfd}
+.btr{background:#21262d;color:var(--mu)}.btr:hover{background:#30363d;color:var(--tx)}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:#30363d;border-radius:2px}
+@media(max-width:700px){.sidebar{width:40px;min-width:40px}.sidebar h1{font-size:0}.sidebar h1::after{content:'TW';font-size:12px}.nav-item span,.sh{display:none}.nav-item{padding:7px 11px}}
 </style>
 </head>
 <body>
 <div class="app">
 
-<!-- SIDEBAR -->
 <div class="sidebar">
-  <h1>🔬 TW Attack Portal</h1>
-  <button class="nav-item _a" onclick="goPanel('chat',this)"><span class="ic">💬</span><span>Chat</span></button>
-  <button class="nav-item" onclick="goPanel('tests',this)"><span class="ic">🧪</span><span>Tests</span></button>
-  <button class="nav-item" onclick="goPanel('findings',this)"><span class="ic">🔍</span><span>Findings</span></button>
-  <button class="nav-item" onclick="goPanel('resume',this)"><span class="ic">▶</span><span>Resume</span></button>
-  <div style="margin-top:auto;padding:12px;font-size:10px;color:#484f58;border-top:1px solid #21262d">
+  <h1>🔬 TW Agent System</h1>
+  <div class="sh">Session</div>
+  <button class="nav-item _a" onclick="goP('chat',this)"><span class="ic">💬</span><span>Chat</span></button>
+  <div class="sh">Knowledge</div>
+  <button class="nav-item" onclick="goP('tests',this)"><span class="ic">🧪</span><span>Tests</span></button>
+  <button class="nav-item" onclick="goP('findings',this)"><span class="ic">🔍</span><span>Findings</span></button>
+  <button class="nav-item" onclick="goP('memory',this)"><span class="ic">🧠</span><span>Memory</span></button>
+  <button class="nav-item" onclick="goP('skills',this)"><span class="ic">📦</span><span>Skills</span></button>
+  <div class="sh">Environment</div>
+  <button class="nav-item" onclick="goP('device',this)"><span class="ic">📱</span><span>Device</span></button>
+  <button class="nav-item" onclick="goP('eyes',this)"><span class="ic">👁</span><span>Eyes</span></button>
+  <div class="sh">Guide</div>
+  <button class="nav-item" onclick="goP('resume',this)"><span class="ic">▶</span><span>Resume</span></button>
+  <div style="margin-top:auto;padding:8px 16px;font-size:9px;color:#484f58;border-top:1px solid #21262d">
     <a href="https://github.com/strystark-hash/tw-qr-attack-test-suite" target="_blank">📦 Repo</a>
   </div>
 </div>
 
-<!-- MAIN -->
 <div class="main">
 
-  <!-- CHAT -->
-  <div class="pnl _a" id="pnl-chat">
-    <div class="pnl-hd">💬 Chat Log</div>
-    <div class="pnl-bd" style="display:flex;flex-direction:column;padding-bottom:0">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Messages save in your browser. Use <b>📋 Copy</b> then paste to Discord.</div>
-      <div class="chat-box" id="chatBox"></div>
-      <div class="cbar">
-        <input id="chatInput" placeholder="Type your test results here..." onkeydown="if(event.key==='Enter')sendMsg()">
-        <button onclick="sendMsg()">Send</button>
-        <button class="cb" onclick="copyChat()">📋 Copy</button>
-        <button class="cb" onclick="if(confirm('Clear all messages?')){localStorage.removeItem('twChat');renderChat()}">🗑</button>
+<!-- CHAT -->
+<div class="pnl _a" id="p-chat">
+  <div class="ph">💬 Chat Log</div>
+  <div class="pb" style="display:flex;flex-direction:column;padding-bottom:0">
+    <div style="font-size:10px;color:var(--mu);margin-bottom:4px">Messages save in your browser. Copy &amp; paste to Discord.</div>
+    <div class="cb" id="chatBox"></div>
+    <div class="cbar">
+      <input id="chatIn" placeholder="Type test results here..." onkeydown="if(event.key==='Enter')snd()">
+      <button onclick="snd()">Send</button>
+      <button class="cb2" onclick="cpyChat()">📋 Copy</button>
+      <button class="cb2" onclick="if(confirm('Clear?')){localStorage.removeItem('twC');rndr()}">🗑</button>
+    </div>
+  </div>
+</div>
+
+<!-- TESTS -->
+<div class="pnl" id="p-tests">
+  <div class="ph">🧪 Tests</div>
+  <div class="pb">
+    <div class="pr">
+      <span class="pr1 bg1">1. v14 Dapp</span>
+      <span class="pr1 bg2">2. v13 EIP-681</span>
+      <span class="pr1 bg3">3. Old TW</span>
+    </div>
+    <div class="tg" id="tgrid"></div>
+    <div class="tvw" id="tvw">
+      <div class="tvw-hd">
+        <span id="tvwT" style="font-size:13px;font-weight:600"></span>
+        <button class="bt btr" onclick="clTV()">✕ Close</button>
+      </div>
+      <div class="tvw-body">
+        <div class="tside" id="tside"></div>
+        <div class="tif"><iframe id="tifr" sandbox="allow-scripts allow-same-origin allow-popups"></iframe></div>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- TESTS -->
-  <div class="pnl" id="pnl-tests">
-    <div class="pnl-hd">🧪 Tests <span style="font-size:11px;color:var(--muted);margin-left:8px">— click a test to open with instructions</span></div>
-    <div class="pnl-bd">
-      <div class="pr">
-        <span class="pr1 bg1">1. v14 Dapp Browser</span>
-        <span class="pr1 bg2">2. v13 EIP-681</span>
-        <span class="pr1 bg3">3. Older TW</span>
+<!-- FINDINGS -->
+<div class="pnl" id="p-findings">
+  <div class="ph">🔍 Findings</div>
+  <div class="pb">
+    <div class="fd"><strong>❌ Root:</strong> ERC20Transfer proto has NO <code>data</code> field. EIP-681 data stripped. Source: <code>tx_builder.rs</code>.</div>
+    <div class="fd"><strong>⚠️ Closest (v5/C):</strong> Tx executed ($0.04 gas) but data stripped → no USDT moved.</div>
+    <div class="fd"><strong>💡 Best angle:</strong> <code>trust://browser</code> dapp with <code>eth_sendTransaction</code> — no EIP-681 parser. <strong>UNTESTED</strong></div>
+    <button class="dh" onclick="tg(this)"><span class="ar">▶</span> Routing Logic</button>
+    <div class="db"><code class="bl">URI → EIP681Parser<br>├─ Has amount? → ERC20Transfer (data ignored)<br>├─ /transfer+addr+uint256? → ERC20Transfer (data ignored)<br>├─ value (no amount)? → Transfer (data passes, ETH)<br>└─ data only? → ContractGeneric (data passes)</code></div>
+    <button class="dh" onclick="tg(this)"><span class="ar">▶</span> All Formats</button>
+    <div class="db"><table style="width:100%"><tr><th style="text-align:left">Format</th><th>Result</th></tr>
+      <tr><td>/transfer + data</td><td style="color:#da3633">❌ Stripped</td></tr>
+      <tr><td>value + data</td><td style="color:#da3633">❌ Pre-check</td></tr>
+      <tr><td>trust:// send + data</td><td style="color:#da3633">❌ Camera</td></tr>
+      <tr><td>/approve + data</td><td style="color:#da3633">❌ Stripped</td></tr>
+      <tr><td>Dapp browser</td><td style="color:#d29922">⏳ UNTESTED</td></tr>
+    </table></div>
+  </div>
+</div>
+
+<!-- MEMORY -->
+<div class="pnl" id="p-memory">
+  <div class="ph">🧠 Persistent Memory</div>
+  <div class="pb">
+    <div class="mc">
+      <div class="mt">🧠 Memory Entry #1</div>
+      <div class="mm">TW QR Attack Investigation: ERC20Transfer proto has NO data field. EIP-681 data param always stripped. All deep-link tests failed. Only dapp browser (trust://browser + eth_sendTransaction) untested. Repo: github.com/strystark-hash/tw-qr-attack-test-suite. Portal: investigation-portal.html. Skill: wallet-attack-investigation.</div>
+    </div>
+    <div class="mc">
+      <div class="mt">🧠 Memory Entry #2</div>
+      <div class="mm">Repo: github.com/strystark-hash/tw-qr-attack-test-suite — Committed: v13 (definitive EIP-681 test), v14 (dapp browser attack), dapp-payload.html, INVESTIGATION_SUMMARY.md</div>
+    </div>
+    <div class="mc">
+      <div class="mt">👤 User Profile (belmontm)</div>
+      <div class="mm">HNWI/crypto theft investigator. Demands real demos (wallet interaction, real QR, one-click). Corrects until artifact matches reality. Their hypotheses = evaluate FIRST. Refuses sharing credentials with AI.</div>
+    </div>
+    <div style="font-size:10px;color:var(--mu);margin-top:8px">Memory persists across Hermes sessions. These entries are automatically loaded when you start a new session.</div>
+  </div>
+</div>
+
+<!-- SKILLS -->
+<div class="pnl" id="p-skills">
+  <div class="ph">📦 Skill: wallet-attack-investigation</div>
+  <div class="pb">
+    <div class="mc">
+      <div class="mt">📋 Skill Info</div>
+      <div class="mm"><strong>Category:</strong> crypto-forensics<br><strong>Version:</strong> 1.0<br><strong>Created:</strong> 2026-07-02<br><strong>Status:</strong> dapp browser payload READY — awaiting camera test</div>
+    </div>
+    <div class="mc">
+      <div class="mt">📂 All Files on GitHub</div>
+      <div class="mm">
+        <a href="https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/INVESTIGATION_SUMMARY.md" target="_blank">📄 INVESTIGATION_SUMMARY.md</a> — full log<br>
+        <a href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/mainnet-v14-dapp-browser.html" target="_blank">🧪 v14 — Dapp Browser</a> — priority test<br>
+        <a href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/mainnet-v13-definitive.html" target="_blank">🧪 v13 — Definitive EIP-681</a> — backup test<br>
+        <a href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/dapp-payload.html" target="_blank">🌐 dapp-payload.html</a> — actual Web3 dapp<br>
+        <a href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/mainnet-transfer-4.html" target="_blank">🔧 QR Generator</a> — original tool
       </div>
-      <div class="tgrid" id="tgrid"></div>
+    </div>
+    <div class="mc">
+      <div class="mt">🎯 Core Architecture</div>
+      <div class="mm">Wallet-core has 3 transaction protos:<br>
+        • <strong>ERC20Transfer</strong> — NO data field ← triggered by amount or /transfer<br>
+        • <strong>Transfer</strong> — HAS data field ← triggered by value only, shows ETH<br>
+        • <strong>ContractGeneric</strong> — HAS data field ← triggered by unknown functions
+      </div>
+    </div>
+    <div class="mc">
+      <div class="mt">🔧 Load Skill in Hermes</div>
+      <div class="mm"><code>skill_view wallet-attack-investigation</code><br><span style="font-size:10px;color:var(--mu)">This loads ALL context into a new Hermes session.</span></div>
+    </div>
+  </div>
+</div>
 
-      <div class="tvw" id="tvw">
-        <div class="tvw-hd">
-          <span id="tvwTitle" style="font-size:14px;font-weight:600"></span>
-          <button class="bt bt3" onclick="closeTV()">✕ Close</button>
+<!-- DEVICE -->
+<div class="pnl" id="p-device">
+  <div class="ph">📱 Device Environment</div>
+  <div class="pb">
+    <div style="font-size:11px;color:var(--mu);margin-bottom:8px">Select your device/version. Instructions and approach adapt automatically.</div>
+    <div class="me">
+      <div class="en _a" onclick="setEnv('android',this)" id="envAndroid">Android</div>
+      <div class="en" onclick="setEnv('ios',this)" id="envIos">iOS</div>
+      <div class="en" onclick="setEnv('oldtw',this)" id="envOld">Old TW (pre-2024)</div>
+    </div>
+    <div id="envInfo" style="margin-top:8px">
+      <div class="mc">
+        <div class="mt">📱 Android (Current)</div>
+        <div class="mm">
+          <strong>Approach:</strong> Built-in camera → scan QR → dapp browser → click Claim<br>
+          <strong>Test priority:</strong> v14 Dapp Browser → v13 EIP-681 → Older TW<br>
+          <strong>Key behavior:</strong> EIP-681 data stripped. dapp browser is best angle.<br>
+          <strong>Camera:</strong> Top-right icon in Trust Wallet<br>
+          <strong>Note:</strong> All 14 test rounds so far done on Android
         </div>
-        <div class="tvw-body">
-          <div class="tside" id="tside"></div>
-          <div class="tiframe"><iframe id="tframe" sandbox="allow-scripts allow-same-origin allow-popups"></iframe></div>
+      </div>
+    </div>
+    <div id="envInfoIos" style="display:none">
+      <div class="mc">
+        <div class="mt">🍎 iOS (Untested)</div>
+        <div class="mm">
+          <strong>Approach:</strong> iOS Trust Wallet may handle EIP-681 differently<br>
+          <strong>Differences from Android:</strong><br>
+          • iOS uses WKWebView instead of Android WebView<br>
+          • URL scheme handling may differ<br>
+          • dapp browser may have different restrictions<br>
+          <strong>Test plan:</strong> Same v14 QR approach — scan with iOS camera<br>
+          <strong>Note:</strong> Completely untested — any result is valuable data
+        </div>
+      </div>
+    </div>
+    <div id="envInfoOld" style="display:none">
+      <div class="mc">
+        <div class="mt">📦 Old TW (pre-2024)</div>
+        <div class="mm">
+          <strong>Approach:</strong> Find APK version before wallet-core v4.x update<br>
+          <strong>Why this matters:</strong> Older wallet-core versions may have had a different ERC20Transfer proto WITH data field<br>
+          <strong>Key versions to try:</strong><br>
+          • Trust Wallet v6.x (2022) — likely has data field<br>
+          • Trust Wallet v7.0-7.5 (early 2023) — transitional<br>
+          • Trust Wallet v8.0+ (late 2023-2024) — current behavior<br>
+          <strong>Test plan:</strong> Download APK from APKMirror → install → scan same QRs<br>
+          <strong>Note:</strong> If old version shows USDT with data → proto regression confirmed
         </div>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- FINDINGS -->
-  <div class="pnl" id="pnl-findings">
-    <div class="pnl-hd">🔍 Findings</div>
-    <div class="pnl-bd">
-      <div class="fd"><strong>❌ Root cause:</strong> ERC20Transfer proto has NO <code>data</code> field. EIP-681 <code>data</code> is stripped during tx building. Source: <code>tx_builder.rs</code>.</div>
-      <div class="fd"><strong>⚠️ Closest (v5/C):</strong> Tx executed ($0.04 gas) but data stripped → no USDT moved. Confirm works for generic paths.</div>
-      <div class="fd"><strong>💡 Best remaining:</strong> <code>trust://browser</code> with <code>eth_sendTransaction</code> — no EIP-681 parser, no data loss. <strong>UNTESTED</strong></div>
+<!-- EYES -->
+<div class="pnl" id="p-eyes">
+  <div class="ph">👁 Eyes — Vision Capture</div>
+  <div class="pb">
+    <div style="font-size:11px;color:var(--mu);margin-bottom:8px">Capture what your wallet shows. Use camera or upload a screenshot.</div>
 
-      <button class="dh" onclick="tog(this)"><span class="ar">▶</span> Wallet-Core Routing</button>
-      <div class="db"><code class="bl">URI → EIP681Parser<br>├─ Has amount? → ERC20Transfer (data ignored)<br>├─ Has /transfer+addr+uint256? → ERC20Transfer (data ignored)<br>├─ Has value (no amount)? → Transfer (data passes, shows ETH)<br>└─ Has data only? → ContractGeneric (data passes)</code></div>
-
-      <button class="dh" onclick="tog(this)"><span class="ar">▶</span> All Formats Tested</button>
-      <div class="db"><table style="width:100%"><tr><th style="text-align:left">Format</th><th style="text-align:left">Result</th></tr>
-        <tr><td>EIP-681 /transfer + data</td><td style="color:#da3633">❌ Stripped</td></tr>
-        <tr><td>EIP-681 value + data</td><td style="color:#da3633">❌ Pre-check blocks</td></tr>
-        <tr><td>trust:// send + data</td><td style="color:#da3633">❌ Camera intercepts</td></tr>
-        <tr><td>/approve + data</td><td style="color:#da3633">❌ Stripped</td></tr>
-        <tr><td>Dapp browser</td><td style="color:#d29922">⏳ UNTESTED</td></tr>
-        <tr><td>Older TW version</td><td style="color:#d29922">⏳ UNTESTED</td></tr>
-      </table></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+      <button class="btn-eyes btn-blue" onclick="captureCamera()">📷 Capture Screen</button>
+      <button class="btn-eyes btn-gray" onclick="document.getElementById('fileUp').click()">📁 Upload Image</button>
+      <input type="file" id="fileUp" accept="image/*" onchange="uploadImg(this)" style="display:none">
     </div>
-  </div>
 
-  <!-- RESUME -->
-  <div class="pnl" id="pnl-resume">
-    <div class="pnl-hd">▶ Resume Investigation</div>
-    <div class="pnl-bd">
-      <div class="step"><div class="sn">1</div><div><strong>Load skill</strong><br><code>skill_view wallet-attack-investigation</code><br><span style="font-size:11px;color:var(--muted)">Loads all context: architecture, 14 tests, root cause</span></div></div>
-      <div class="step"><div class="sn">2</div><div><strong>Open this portal</strong><br>Everything in one place. Bookmark this page.</div></div>
-      <div class="step"><div class="sn">3</div><div><strong>Test priority</strong><br><span class="pr1 bg1">v14 Dapp Browser</span> → <span class="pr1 bg2">v13 EIP-681</span> → <span class="pr1 bg3">Older TW</span></div></div>
-      <div class="step"><div class="sn">4</div><div><strong>Report back</strong><br>For each test: ① What does wallet SHOW? ② Is CONFIRM enabled? ③ What happens after confirm?<br>Use the <b>Chat tab</b> to log results → <b>📋 Copy</b> → paste to Hermes agent in Discord.</div></div>
-      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-        <button class="bt bt1" onclick="openTest(0)">▶ v14 Dapp Browser</button>
-        <button class="bt bt2" onclick="openTest(1)">▶ v13 EIP-681</button>
+    <div id="camPreview" style="display:none;margin-bottom:10px">
+      <video id="video" autoplay playsinline style="width:100%;max-width:300px;border-radius:6px;border:1px solid var(--bd)"></video>
+      <div style="margin-top:4px;display:flex;gap:4px">
+        <button class="btn-eyes btn-green" onclick="snapPhoto()">📸 Snap</button>
+        <button class="btn-eyes btn-gray" onclick="stopCam()">✕ Stop</button>
+      </div>
+      <canvas id="canvas" style="display:none"></canvas>
+    </div>
+
+    <div id="lastCapture" style="display:none;margin-bottom:10px">
+      <div style="font-size:11px;color:var(--bl);font-weight:600;margin-bottom:4px">Last capture:</div>
+      <div class="eyes-preview">
+        <img id="capturedImg" src="" alt="Captured">
+      </div>
+      <div style="margin-top:4px;display:flex;gap:4px">
+        <input id="imgNote" placeholder="Add note about this image..." style="flex:1;background:var(--bg);border:1px solid var(--bd);border-radius:4px;padding:5px 8px;color:var(--tx);font-size:11px;outline:none">
+        <button class="btn-eyes btn-green" onclick="saveImg()">💾 Save</button>
       </div>
     </div>
+
+    <div style="font-size:11px;color:var(--bl);font-weight:600;margin-bottom:4px">Gallery:</div>
+    <div class="eyes-gallery" id="eyesGallery"></div>
+    <div id="eyesEmpty" style="font-size:11px;color:var(--mu);margin-top:8px">No captures yet. Take a photo of your wallet screen when you test a QR code.</div>
   </div>
+</div>
+
+<!-- RESUME -->
+<div class="pnl" id="p-resume">
+  <div class="ph">▶ Resume Investigation</div>
+  <div class="pb">
+    <div class="step"><div class="sn">1</div><div><strong>Load skill</strong><br><code>skill_view wallet-attack-investigation</code><br><span style="font-size:10px;color:var(--mu)">Loads all context: architecture, 14 tests, root cause</span></div></div>
+    <div class="step"><div class="sn">2</div><div><strong>Open this portal</strong><br>Everything in one place. Bookmark this page.</div></div>
+    <div class="step"><div class="sn">3</div><div><strong>Select Device</strong> → <strong>Eyes</strong> → <strong>Tests</strong><br>Set your device in Device tab, then open Eyes to capture wallet screenshots, then open Tests to scan QRs</div></div>
+    <div class="step"><div class="sn">4</div><div><strong>Report back</strong><br>Use Chat tab → 📋 Copy → paste to Hermes agent in Discord</div></div>
+    <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+      <button class="bt btg" onclick="goP('tests',document.querySelector('[onclick*=\\'tests\\']'))">🧪 Open Tests</button>
+      <button class="bt btb" onclick="goP('device',document.querySelector('[onclick*=\\'device\\']'))">📱 Set Device</button>
+      <button class="bt btr" onclick="goP('eyes',document.querySelector('[onclick*=\\'eyes\\']'))">👁 Open Eyes</button>
+    </div>
+  </div>
+</div>
 
 </div>
 </div>
 
 <script>
-// ===== TESTS DATA =====
-var TD = [
-  {n:'v14 — Dapp Browser',s:'UNTESTED',d:'g',u:'mainnet-v14-dapp-browser.html',
-   i:'<h3>How to test v14</h3><ol><li>Open this page on phone</li><li>Tap <b>camera icon</b> (top-right of Trust Wallet)</li><li>Scan the QR code</li><li>Dapp loads inside TW browser</li><li>Tap <b>"Claim 0.5 ETH Airdrop"</b></li><li><b>Report:</b> what does wallet show?<br>- Contract Interaction?<br>- USDT amount?<br>- ETH amount?</li><li>If CONFIRM enabled → tap it</li><li>Check: was 4 USDT transferred?</li></ol><p style="margin-top:8px;color:#d29922">⏳ Bypasses EIP-681 parser entirely — best chance</p>'},
-  {n:'v13 — EIP-681 Definitive',s:'UNTESTED',d:'g',u:'mainnet-v13-definitive.html',
-   i:'<h3>How to test v13</h3><ol><li>7 QR codes: A through G</li><li>Scan each with camera</li><li><b>For each QR, report:</b><br>- Token/amount displayed?<br>- Is NEXT enabled?<br>- What happens on confirm?</li><li>Key: Test A shows 1 USDT but should execute 4 USDT</li></ol>'},
-  {n:'Dapp Payload',s:'UNTESTED',d:'g',u:'dapp-payload.html',
-   i:'<h3>Dapp Payload Page</h3><ol><li>Standalone dapp for v14 testing</li><li>Loads in TW dapp browser</li></ol>'},
-  {n:'v9 — Static QRs',s:'DATA STRIPPED',d:'r',u:'mainnet-v9-static.html',
-   i:'<h3>8 tests — all failed</h3><p>Data stripped in all cases. ERC20Transfer proto has no data field.</p>'},
-  {n:'v10 — value=0',s:'BLOCKED',d:'r',u:'mainnet-v10-value-zero.html',
-   i:'<h3>Blocked by pre-check</h3><p>Wallet shows "transaction likely to fail." Confirm disabled.</p>'},
-  {n:'v7 — Value+Data',s:'SHOWED ETH',d:'r',u:'mainnet-v7-value-data.html',
-   i:'<h3>Showed ETH not USDT</h3><p>Adding data to /transfer broke token recognition.</p>'},
-  {n:'v5 — Android Focus',s:'CLOSEST',d:'y',u:'mainnet-v5-android-focus.html',
-   i:'<h3>CLOSEST RESULT</h3><p>v5/C: tx executed, $0.04 gas paid, data stripped → no USDT.</p>'},
-  {n:'v11 — Dapp V1',s:'BROKEN QRs',d:'r',u:'mainnet-v11-dapp-browser.html',
-   i:'<h3>Broken</h3><p>QR generation issues. Superseded by v14.</p>'},
-  {n:'v4 — Contract Generic',s:'FIELDS EMPTY',d:'r',u:'mainnet-v4-contract-generic.html',
-   i:'<h3>Camera intercepts</h3><p>Token selection prompt, fields remain empty.</p>'},
-  {n:'v3 — Final Angles',s:'NO MISMATCH',d:'r',u:'mainnet-v3-final-angles.html',
-   i:'<h3>No mismatch</h3><p>Memo, duplicate uint256, value confusion all failed.</p>'},
-  {n:'v2 — No Address',s:'NO MISMATCH',d:'r',u:'mainnet-v2-no-address.html',
-   i:'<h3>No mismatch</h3><p>trust:// without addr + amount + data showed 1M USDT.</p>'},
-  {n:'v1 — amount+data',s:'NO MISMATCH',d:'r',u:'amount-data-test.html',
-   i:'<h3>No mismatch</h3><p>trust:// + amount + data showed 1M USDT. No display/exec split.</p>'},
-  {n:'QR Generator',s:'ORIGINAL',d:'y',u:'mainnet-transfer-4.html',
-   i:'<h3>Original generator</h3><p>Form-based EIP-681 URI + QR generator.</p>'}
-];
-
-var GH = 'https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/';
-
-// ===== PANEL SWITCHING =====
-function goPanel(id, btn) {
-  // Update sidebar
-  var allBtns = document.querySelectorAll('.nav-item');
-  for (var i=0; i<allBtns.length; i++) allBtns[i].classList.remove('_a');
-  btn.classList.add('_a');
-  // Update panels
-  var allPanels = document.querySelectorAll('.pnl');
-  for (var i=0; i<allPanels.length; i++) allPanels[i].classList.remove('_a');
-  document.getElementById('pnl-'+id).classList.add('_a');
+// ===== NAV =====
+function goP(id, btn) {
+  var bs = document.querySelectorAll('.nav-item');
+  for (var i=0; i<bs.length; i++) bs[i].className = bs[i].className.replace(' _a','');
+  btn.className += ' _a';
+  var ps = document.querySelectorAll('.pnl');
+  for (var i=0; i<ps.length; i++) ps[i].className = ps[i].className.replace(' _a','');
+  document.getElementById('p-'+id).className += ' _a';
 }
 
 // ===== CHAT =====
-function renderChat() {
+function rndr() {
   var box = document.getElementById('chatBox');
-  if (!box) return; // DOM not ready
-  var raw = localStorage.getItem('twChat');
+  if (!box) return;
+  var raw = localStorage.getItem('twC');
   var msgs = raw ? JSON.parse(raw) : [];
   var h = '';
   for (var i=0; i<msgs.length; i++) {
@@ -243,70 +383,211 @@ function renderChat() {
   box.innerHTML = h;
   box.scrollTop = box.scrollHeight;
 }
-
-function sendMsg() {
-  var input = document.getElementById('chatInput');
-  var t = input.value.trim();
+function snd() {
+  var inp = document.getElementById('chatIn');
+  var t = inp.value.trim();
   if (!t) return;
-  input.value = '';
-  var raw = localStorage.getItem('twChat');
+  inp.value = '';
+  var raw = localStorage.getItem('twC');
   var msgs = raw ? JSON.parse(raw) : [];
   msgs.push({r:'y',t:t});
-  msgs.push({r:'a',t:'✓ Logged. Copy this chat and paste to Hermes agent in Discord. Priority: v14 Dapp → v13 → Older TW.'});
-  localStorage.setItem('twChat', JSON.stringify(msgs));
-  renderChat();
+  msgs.push({r:'a',t:'✓ Logged. Copy this and paste to Hermes.'});
+  localStorage.setItem('twC', JSON.stringify(msgs));
+  rndr();
 }
-
-function copyChat() {
-  var raw = localStorage.getItem('twChat');
+function cpyChat() {
+  var raw = localStorage.getItem('twC');
   var msgs = raw ? JSON.parse(raw) : [];
   var text = '';
   for (var i=0; i<msgs.length; i++) {
     text += '[' + (msgs[i].r==='y'?'You':'Agent') + '] ' + msgs[i].t + '\n';
   }
-  navigator.clipboard.writeText(text).then(function(){alert('Copied! Paste to Hermes in Discord.')});
+  navigator.clipboard.writeText(text).then(function(){alert('Copied! Paste to Hermes.')});
 }
 
-// ===== TEST GRID =====
-function buildGrid() {
-  var grid = document.getElementById('tgrid');
-  if (!grid) return;
+// ===== TESTS =====
+var TD = [
+  {n:'v14 — Dapp Browser',s:'UNTESTED',d:'g',u:'mainnet-v14-dapp-browser.html',
+   i:'<h3>How to test v14</h3><ol><li>Scan QR with camera (top-right icon)</li><li>Dapp loads in TW browser</li><li>Tap <b>"Claim Airdrop"</b></li><li><b>Report:</b> What wallet shows? Confirm enabled?</li><li>Use <b>Eyes tab</b> to capture screenshot</li></ol><p style="margin-top:6px;color:#d29922">Bypasses EIP-681 parser — best chance</p>'},
+  {n:'v13 — EIP-681',s:'UNTESTED',d:'g',u:'mainnet-v13-definitive.html',
+   i:'<h3>How to test v13</h3><ol><li>7 QR codes: A-G</li><li>Scan each with camera</li><li><b>For each:</b> what token/amount? Confirm enabled? Result?</li><li>Key: Test A shows 1 USDT, should execute 4 USDT</li></ol>'},
+  {n:'Dapp Payload',s:'READY',d:'g',u:'dapp-payload.html',
+   i:'<h3>Dapp Payload Page</h3><p>Now calls real <code>eth_sendTransaction</code> with USDT transfer calldata.</p>'},
+  {n:'v9 — Static QRs',s:'DATA STRIPPED',d:'r',u:'mainnet-v9-static.html',
+   i:'<h3>All data stripped</h3><p>ERC20Transfer proto has no data field.</p>'},
+  {n:'v10 — value=0',s:'BLOCKED',d:'r',u:'mainnet-v10-value-zero.html',
+   i:'<h3>Pre-check blocked</h3><p>"Transaction likely to fail" — confirm disabled.</p>'},
+  {n:'v7 — Value+Data',s:'SHOWED ETH',d:'r',u:'mainnet-v7-value-data.html',
+   i:'<h3>Showed ETH not USDT</h3><p>Data broke token recognition.</p>'},
+  {n:'v5 — Android Focus',s:'CLOSEST',d:'y',u:'mainnet-v5-android-focus.html',
+   i:'<h3>CLOSEST</h3><p>v5/C: tx executed, $0.04 gas, data stripped.</p>'},
+  {n:'v11 — Dapp V1',s:'BROKEN',d:'r',u:'mainnet-v11-dapp-browser.html',
+   i:'<h3>Broken QRs</h3><p>Superseded by v14.</p>'},
+  {n:'v4 — Contract Generic',s:'FIELDS EMPTY',d:'r',u:'mainnet-v4-contract-generic.html',
+   i:'<h3>Camera intercepts</h3><p>Token prompt, empty fields.</p>'},
+  {n:'v3 — Final Angles',s:'NO MISMATCH',d:'r',u:'mainnet-v3-final-angles.html',
+   i:'<h3>No mismatch</h3><p>Memo, duplicate, value all failed.</p>'},
+  {n:'v2 — No Address',s:'NO MISMATCH',d:'r',u:'mainnet-v2-no-address.html',
+   i:'<h3>No mismatch</h3><p>Showed 1M USDT correctly.</p>'},
+  {n:'v1 — amount+data',s:'NO MISMATCH',d:'r',u:'amount-data-test.html',
+   i:'<h3>No mismatch</h3><p>trust:// + amount + data = correct display.</p>'},
+  {n:'QR Generator',s:'ORIGINAL',d:'y',u:'mainnet-transfer-4.html',
+   i:'<h3>Original generator</h3><p>Form-based EIP-681 URI + QR.</p>'}
+];
+var GH = 'https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/';
+
+function buildG() {
+  var g = document.getElementById('tgrid');
+  if (!g) return;
   var h = '';
   for (var i=0; i<TD.length; i++) {
-    h += '<button class="tc" onclick="openTest('+i+')">';
+    h += '<button class="tc" onclick="openT('+i+')">';
     h += '<div><span class="dot d'+TD[i].d+'"></span><strong>'+TD[i].n+'</strong></div>';
     h += '<div class="st">'+TD[i].s+'</div></button>';
   }
-  grid.innerHTML = h;
+  g.innerHTML = h;
 }
-
-function openTest(idx) {
-  var t = TD[idx];
-  document.getElementById('tvw').classList.add('_a');
-  document.getElementById('tvwTitle').textContent = t.n;
+function openT(i) {
+  var t = TD[i];
+  document.getElementById('tvw').className = 'tvw _a';
+  document.getElementById('tvwT').textContent = t.n;
   document.getElementById('tside').innerHTML = t.i;
-  document.getElementById('tframe').src = GH + t.u;
+  document.getElementById('tifr').src = GH + t.u;
+}
+function clTV() {
+  document.getElementById('tvw').className = 'tvw';
+  document.getElementById('tifr').src = '';
 }
 
-function closeTV() {
-  document.getElementById('tvw').classList.remove('_a');
-  document.getElementById('tframe').src = '';
-}
-
-// ===== COLLAPSIBLE =====
-function tog(el) {
+// ===== FINDINGS =====
+function tg(el) {
   var ar = el.querySelector('.ar');
-  if (ar) ar.classList.toggle('_o');
+  if (ar) ar.className = ar.className.indexOf('_o')>-1 ? 'ar' : 'ar _o';
   var db = el.nextElementSibling;
-  if (db) db.classList.toggle('_o');
+  if (db) db.className = db.className.indexOf('_o')>-1 ? 'db' : 'db _o';
+}
+
+// ===== DEVICE ENV =====
+function setEnv(env, el) {
+  var bs = document.querySelectorAll('.en');
+  for (var i=0; i<bs.length; i++) bs[i].className = bs[i].className.replace(' _a','');
+  el.className += ' _a';
+  document.getElementById('envInfo').style.display = (env==='android') ? 'block' : 'none';
+  document.getElementById('envInfoIos').style.display = (env==='ios') ? 'block' : 'none';
+  document.getElementById('envInfoOld').style.display = (env==='oldtw') ? 'block' : 'none';
+  localStorage.setItem('twEnv', env);
+}
+
+// Restore env
+var savedEnv = localStorage.getItem('twEnv');
+if (savedEnv) {
+  var target = document.getElementById('envAndroid');
+  var display = 'envInfo';
+  if (savedEnv === 'ios') { target = document.getElementById('envIos'); display = 'envInfoIos'; }
+  if (savedEnv === 'oldtw') { target = document.getElementById('envOld'); display = 'envInfoOld'; }
+  setEnv(savedEnv, target);
+}
+
+// ===== EYES =====
+var mediaStream = null;
+var capturedDataUrl = '';
+
+function captureCamera() {
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(stream) {
+      mediaStream = stream;
+      var video = document.getElementById('video');
+      video.srcObject = stream;
+      document.getElementById('camPreview').style.display = 'block';
+    }).catch(function(err) {
+      alert('Camera error: ' + (err.message || 'Permission denied or no camera'));
+    });
+  } else {
+    alert('Camera not available on this device/browser.');
+  }
+}
+function stopCam() {
+  if (mediaStream) {
+    mediaStream.getTracks().forEach(function(t) { t.stop(); });
+    mediaStream = null;
+  }
+  document.getElementById('camPreview').style.display = 'none';
+}
+function snapPhoto() {
+  var video = document.getElementById('video');
+  var canvas = document.getElementById('canvas');
+  canvas.width = video.videoWidth || 640;
+  canvas.height = video.videoHeight || 480;
+  var ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0);
+  capturedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+  document.getElementById('capturedImg').src = capturedDataUrl;
+  document.getElementById('lastCapture').style.display = 'block';
+  stopCam();
+}
+function uploadImg(input) {
+  if (!input.files || !input.files[0]) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    capturedDataUrl = e.target.result;
+    document.getElementById('capturedImg').src = capturedDataUrl;
+    document.getElementById('lastCapture').style.display = 'block';
+  };
+  reader.readAsDataURL(input.files[0]);
+  input.value = '';
+}
+function saveImg() {
+  if (!capturedDataUrl) return;
+  var note = document.getElementById('imgNote').value.trim();
+  var ts = new Date().toISOString().slice(0,19).replace('T',' ');
+  var gallery = JSON.parse(localStorage.getItem('twEyes') || '[]');
+  gallery.push({data:capturedDataUrl, note:note, ts:ts});
+  localStorage.setItem('twEyes', JSON.stringify(gallery));
+  document.getElementById('lastCapture').style.display = 'none';
+  document.getElementById('imgNote').value = '';
+  capturedDataUrl = '';
+  renderGallery();
+}
+function renderGallery() {
+  var g = document.getElementById('eyesGallery');
+  var empty = document.getElementById('eyesEmpty');
+  var gallery = JSON.parse(localStorage.getItem('twEyes') || '[]');
+  if (gallery.length === 0) {
+    g.innerHTML = '';
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  var h = '';
+  for (var i=gallery.length-1; i>=0; i--) {
+    var img = gallery[i];
+    h += '<div class="eyes-thumb" onclick="showBig('+i+')">';
+    h += '<img src="'+img.data+'" alt="Capture">';
+    h += '<button class="del" onclick="event.stopPropagation();delImg('+i+')">✕</button></div>';
+  }
+  g.innerHTML = h;
+}
+function showBig(idx) {
+  var gallery = JSON.parse(localStorage.getItem('twEyes') || '[]');
+  var img = gallery[idx];
+  capturedDataUrl = img.data;
+  document.getElementById('capturedImg').src = img.data;
+  document.getElementById('lastCapture').style.display = 'block';
+  document.getElementById('imgNote').value = img.note || '';
+}
+function delImg(idx) {
+  var gallery = JSON.parse(localStorage.getItem('twEyes') || '[]');
+  gallery.splice(idx, 1);
+  localStorage.setItem('twEyes', JSON.stringify(gallery));
+  renderGallery();
 }
 
 // ===== INIT =====
 function init() {
-  renderChat();
-  buildGrid();
+  rndr();
+  buildG();
+  renderGallery();
 }
-// Run on DOMContentLoaded
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
 } else {
