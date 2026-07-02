@@ -113,6 +113,7 @@ a{color:var(--bl);text-decoration:none}
 <body>
 <div class="app">
 
+<!-- SIDEBAR -->
 <div class="sidebar">
   <h1>🔬 TW Agent System</h1>
   <div class="sh">Session</div>
@@ -138,13 +139,13 @@ a{color:var(--bl);text-decoration:none}
 <div class="pnl _a" id="p-chat">
   <div class="ph">💬 Chat Log</div>
   <div class="pb" style="display:flex;flex-direction:column;padding-bottom:0">
-    <div style="font-size:10px;color:var(--mu);margin-bottom:4px">Messages save in your browser. Copy &amp; paste to Discord.</div>
+    <div style="font-size:10px;color:var(--mu);margin-bottom:4px">Messages save in your browser. Click <b>📋 Copy</b> then paste to Discord.</div>
     <div class="cb" id="chatBox"></div>
     <div class="cbar">
       <input id="chatIn" placeholder="Type test results here..." onkeydown="if(event.key==='Enter')snd()">
       <button onclick="snd()">Send</button>
       <button class="cb2" onclick="cpyChat()">📋 Copy</button>
-      <button class="cb2" onclick="if(confirm('Clear?')){localStorage.removeItem('twC');rndr()}">🗑</button>
+      <button class="cb2" onclick="if(confirm('Clear all messages?')){localStorage.removeItem('twC');rndr()}">🗑</button>
     </div>
   </div>
 </div>
@@ -154,9 +155,9 @@ a{color:var(--bl);text-decoration:none}
   <div class="ph">🧪 Tests</div>
   <div class="pb">
     <div class="pr">
-      <span class="pr1 bg1">1. v14 Dapp</span>
+      <span class="pr1 bg1">1. v14 Dapp Browser</span>
       <span class="pr1 bg2">2. v13 EIP-681</span>
-      <span class="pr1 bg3">3. Old TW</span>
+      <span class="pr1 bg3">3. Old TW (pre-2024)</span>
     </div>
     <div class="tg" id="tgrid"></div>
     <div class="tvw" id="tvw">
@@ -176,18 +177,19 @@ a{color:var(--bl);text-decoration:none}
 <div class="pnl" id="p-findings">
   <div class="ph">🔍 Findings</div>
   <div class="pb">
-    <div class="fd"><strong>❌ Root:</strong> ERC20Transfer proto has NO <code>data</code> field. EIP-681 data stripped. Source: <code>tx_builder.rs</code>.</div>
-    <div class="fd"><strong>⚠️ Closest (v5/C):</strong> Tx executed ($0.04 gas) but data stripped → no USDT moved.</div>
-    <div class="fd"><strong>💡 Best angle:</strong> <code>trust://browser</code> dapp with <code>eth_sendTransaction</code> — no EIP-681 parser. <strong>UNTESTED</strong></div>
-    <button class="dh" onclick="tg(this)"><span class="ar">▶</span> Routing Logic</button>
-    <div class="db"><code class="bl">URI → EIP681Parser<br>├─ Has amount? → ERC20Transfer (data ignored)<br>├─ /transfer+addr+uint256? → ERC20Transfer (data ignored)<br>├─ value (no amount)? → Transfer (data passes, ETH)<br>└─ data only? → ContractGeneric (data passes)</code></div>
-    <button class="dh" onclick="tg(this)"><span class="ar">▶</span> All Formats</button>
-    <div class="db"><table style="width:100%"><tr><th style="text-align:left">Format</th><th>Result</th></tr>
-      <tr><td>/transfer + data</td><td style="color:#da3633">❌ Stripped</td></tr>
-      <tr><td>value + data</td><td style="color:#da3633">❌ Pre-check</td></tr>
-      <tr><td>trust:// send + data</td><td style="color:#da3633">❌ Camera</td></tr>
-      <tr><td>/approve + data</td><td style="color:#da3633">❌ Stripped</td></tr>
-      <tr><td>Dapp browser</td><td style="color:#d29922">⏳ UNTESTED</td></tr>
+    <div class="fd"><strong>❌ Root cause:</strong> ERC20Transfer proto has NO <code>data</code> field. EIP-681 data param always stripped during tx building. Source: <code>tx_builder.rs</code> in wallet-core.</div>
+    <div class="fd"><strong>⚠️ Closest (v5/C):</strong> Transaction executed ($0.04 gas) but data stripped → no USDT moved. Proves confirm works for generic contract interaction paths.</div>
+    <div class="fd"><strong>💡 Best remaining angle:</strong> <code>trust://browser</code> dapp with <code>eth_sendTransaction</code> — no EIP-681 parser involved, data passes through fully. <strong>UNTESTED</strong></div>
+    <button class="dh" onclick="tg(this)"><span class="ar">▶</span> Wallet-Core Routing Logic</button>
+    <div class="db"><code class="bl">URI → EIP681Parser<br>├─ Has amount? → ERC20Transfer (data ignored)<br>├─ Has /transfer+addr+uint256? → ERC20Transfer (data ignored)<br>├─ Has value (no amount)? → Transfer (data passes, shows ETH)<br>└─ Has data only? → ContractGeneric (data passes)</code></div>
+    <button class="dh" onclick="tg(this)"><span class="ar">▶</span> All URI Formats Tested</button>
+    <div class="db"><table style="width:100%"><tr><th style="text-align:left;padding:2px 5px">Format</th><th style="text-align:left;padding:2px 5px">Result</th></tr>
+      <tr><td style="padding:2px 5px">EIP-681 /transfer + data</td><td style="padding:2px 5px;color:#da3633">❌ Data stripped</td></tr>
+      <tr><td style="padding:2px 5px">EIP-681 value + data</td><td style="padding:2px 5px;color:#da3633">❌ Pre-check blocks</td></tr>
+      <tr><td style="padding:2px 5px">trust:// send + data</td><td style="padding:2px 5px;color:#da3633">❌ Camera intercepts → token flow</td></tr>
+      <tr><td style="padding:2px 5px">/approve + data</td><td style="padding:2px 5px;color:#da3633">❌ Data stripped (same as /transfer)</td></tr>
+      <tr><td style="padding:2px 5px">Dapp browser</td><td style="padding:2px 5px;color:#d29922">⏳ UNTESTED — highest potential</td></tr>
+      <tr><td style="padding:2px 5px">Older TW version</td><td style="padding:2px 5px;color:#d29922">⏳ UNTESTED — may have different proto</td></tr>
     </table></div>
   </div>
 </div>
@@ -196,19 +198,20 @@ a{color:var(--bl);text-decoration:none}
 <div class="pnl" id="p-memory">
   <div class="ph">🧠 Persistent Memory</div>
   <div class="pb">
+    <div style="font-size:11px;color:var(--mu);margin-bottom:8px">These entries are saved in Hermes persistent memory. They load automatically every session.</div>
     <div class="mc">
       <div class="mt">🧠 Memory Entry #1</div>
       <div class="mm">TW QR Attack Investigation: ERC20Transfer proto has NO data field. EIP-681 data param always stripped. All deep-link tests failed. Only dapp browser (trust://browser + eth_sendTransaction) untested. Repo: github.com/strystark-hash/tw-qr-attack-test-suite. Portal: investigation-portal.html. Skill: wallet-attack-investigation.</div>
     </div>
     <div class="mc">
       <div class="mt">🧠 Memory Entry #2</div>
-      <div class="mm">Repo: github.com/strystark-hash/tw-qr-attack-test-suite — Committed: v13 (definitive EIP-681 test), v14 (dapp browser attack), dapp-payload.html, INVESTIGATION_SUMMARY.md</div>
+      <div class="mm">Repo: github.com/strystark-hash/tw-qr-attack-test-suite — Committed: v13 (definitive EIP-681 test), v14 (dapp browser attack), dapp-payload.html, INVESTIGATION_SUMMARY.md, investigation-portal.html</div>
     </div>
     <div class="mc">
       <div class="mt">👤 User Profile (belmontm)</div>
-      <div class="mm">HNWI/crypto theft investigator. Demands real demos (wallet interaction, real QR, one-click). Corrects until artifact matches reality. Their hypotheses = evaluate FIRST. Refuses sharing credentials with AI.</div>
+      <div class="mm">HNWI/crypto theft investigator. Demands real demos (wallet interaction, real QR, one-click). Corrects until artifact matches reality. Their hypotheses are evaluated FIRST. Refuses sharing credentials with AI.</div>
     </div>
-    <div style="font-size:10px;color:var(--mu);margin-top:8px">Memory persists across Hermes sessions. These entries are automatically loaded when you start a new session.</div>
+    <div style="font-size:10px;color:var(--dim);margin-top:8px">To reload memory in a new Hermes session, the skill and memory are automatically loaded. Just run <code>skill_view wallet-attack-investigation</code> to get full context.</div>
   </div>
 </div>
 
@@ -216,31 +219,32 @@ a{color:var(--bl);text-decoration:none}
 <div class="pnl" id="p-skills">
   <div class="ph">📦 Skill: wallet-attack-investigation</div>
   <div class="pb">
+    <div style="font-size:11px;color:var(--mu);margin-bottom:8px">Full investigation context packaged as a reusable Hermes skill. Load anytime.</div>
     <div class="mc">
-      <div class="mt">📋 Skill Info</div>
-      <div class="mm"><strong>Category:</strong> crypto-forensics<br><strong>Version:</strong> 1.0<br><strong>Created:</strong> 2026-07-02<br><strong>Status:</strong> dapp browser payload READY — awaiting camera test</div>
+      <div class="mt">📋 Info</div>
+      <div class="mm"><strong>Category:</strong> crypto-forensics<br><strong>Version:</strong> 1.0<br><strong>Created:</strong> 2026-07-02<br><strong>Status:</strong> dapp browser payload READY — waiting for camera test</div>
     </div>
     <div class="mc">
-      <div class="mt">📂 All Files on GitHub</div>
+      <div class="mt">📂 Key Files on GitHub</div>
       <div class="mm">
-        <a href="https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/INVESTIGATION_SUMMARY.md" target="_blank">📄 INVESTIGATION_SUMMARY.md</a> — full log<br>
-        <a href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/mainnet-v14-dapp-browser.html" target="_blank">🧪 v14 — Dapp Browser</a> — priority test<br>
-        <a href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/mainnet-v13-definitive.html" target="_blank">🧪 v13 — Definitive EIP-681</a> — backup test<br>
-        <a href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/dapp-payload.html" target="_blank">🌐 dapp-payload.html</a> — actual Web3 dapp<br>
-        <a href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/mainnet-transfer-4.html" target="_blank">🔧 QR Generator</a> — original tool
+        <a href="https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/INVESTIGATION_SUMMARY.md" target="_blank">📄 INVESTIGATION_SUMMARY.md</a> — full investigation log<br>
+        <a href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/mainnet-v14-dapp-browser.html" target="_blank">🧪 v14 — Dapp Browser Attack</a> — priority test<br>
+        <a href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/mainnet-v13-definitive.html" target="_blank">🧪 v13 — EIP-681 Definitive</a> — backup test<br>
+        <a href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/dapp-payload.html" target="_blank">🌐 dapp-payload.html</a> — functional Web3 dapp page<br>
+        <a href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/investigation-portal.html" target="_blank">🏠 investigation-portal.html</a> — you are here
       </div>
     </div>
     <div class="mc">
-      <div class="mt">🎯 Core Architecture</div>
+      <div class="mt">🎯 Core Architecture Finding</div>
       <div class="mm">Wallet-core has 3 transaction protos:<br>
-        • <strong>ERC20Transfer</strong> — NO data field ← triggered by amount or /transfer<br>
-        • <strong>Transfer</strong> — HAS data field ← triggered by value only, shows ETH<br>
-        • <strong>ContractGeneric</strong> — HAS data field ← triggered by unknown functions
+        • <strong>ERC20Transfer</strong> — NO data field (triggered by <code>amount</code> or <code>/transfer+address+uint256</code>)<br>
+        • <strong>Transfer</strong> — HAS data field (triggered by <code>value</code> only, shows ETH amount)<br>
+        • <strong>ContractGeneric</strong> — HAS data field (triggered by unknown functions)
       </div>
     </div>
     <div class="mc">
-      <div class="mt">🔧 Load Skill in Hermes</div>
-      <div class="mm"><code>skill_view wallet-attack-investigation</code><br><span style="font-size:10px;color:var(--mu)">This loads ALL context into a new Hermes session.</span></div>
+      <div class="mt">🔧 How to Load This Skill</div>
+      <div class="mm">In a new Hermes session, run:<br><code>skill_view wallet-attack-investigation</code><br><span style="font-size:10px;color:var(--mu)">This loads all context: architecture findings, all 14 test pages, every result, root cause, untested angles, all URI formats, and the resume protocol.</span></div>
     </div>
   </div>
 </div>
@@ -249,7 +253,7 @@ a{color:var(--bl);text-decoration:none}
 <div class="pnl" id="p-device">
   <div class="ph">📱 Device Environment</div>
   <div class="pb">
-    <div style="font-size:11px;color:var(--mu);margin-bottom:8px">Select your device/version. Instructions and approach adapt automatically.</div>
+    <div style="font-size:11px;color:var(--mu);margin-bottom:8px">Select your device/version. Instructions and testing approach adapt automatically.</div>
     <div class="me">
       <div class="en _a" onclick="setEnv('android',this)" id="envAndroid">Android</div>
       <div class="en" onclick="setEnv('ios',this)" id="envIos">iOS</div>
@@ -257,42 +261,43 @@ a{color:var(--bl);text-decoration:none}
     </div>
     <div id="envInfo" style="margin-top:8px">
       <div class="mc">
-        <div class="mt">📱 Android (Current)</div>
+        <div class="mt">📱 Android (Current — 14 test rounds completed)</div>
         <div class="mm">
-          <strong>Approach:</strong> Built-in camera → scan QR → dapp browser → click Claim<br>
-          <strong>Test priority:</strong> v14 Dapp Browser → v13 EIP-681 → Older TW<br>
-          <strong>Key behavior:</strong> EIP-681 data stripped. dapp browser is best angle.<br>
-          <strong>Camera:</strong> Top-right icon in Trust Wallet<br>
-          <strong>Note:</strong> All 14 test rounds so far done on Android
+          <strong>Approach:</strong> Built-in camera → scan QR → dapp browser → click "Claim Airdrop" button<br>
+          <strong>Test priority:</strong> 1. v14 Dapp Browser → 2. v13 EIP-681 → 3. Older TW version<br>
+          <strong>Key behavior:</strong> EIP-681 data param is always stripped. ERC20Transfer proto has no data field.<br>
+          <strong>Camera button:</strong> Top-right icon (QR code) in Trust Wallet main screen<br>
+          <strong>Best angle:</strong> v14 Dapp Browser — uses <code>trust://browser?url=...</code> which bypasses the EIP-681 parser entirely
         </div>
       </div>
     </div>
     <div id="envInfoIos" style="display:none">
       <div class="mc">
-        <div class="mt">🍎 iOS (Untested)</div>
+        <div class="mt">🍎 iOS (Completely Untested)</div>
         <div class="mm">
-          <strong>Approach:</strong> iOS Trust Wallet may handle EIP-681 differently<br>
-          <strong>Differences from Android:</strong><br>
-          • iOS uses WKWebView instead of Android WebView<br>
-          • URL scheme handling may differ<br>
-          • dapp browser may have different restrictions<br>
-          <strong>Test plan:</strong> Same v14 QR approach — scan with iOS camera<br>
-          <strong>Note:</strong> Completely untested — any result is valuable data
+          <strong>Approach:</strong> iOS Trust Wallet may handle EIP-681 URIs differently from Android<br>
+          <strong>Expected differences:</strong><br>
+          • Uses WKWebView instead of Android WebView — different JS injection behavior<br>
+          • URL scheme handling (trust:// vs ethereum:) may route differently<br>
+          • dapp browser may have different restrictions on eth_sendTransaction<br>
+          <strong>Test plan:</strong> Same v14 QR approach — scan with iOS Trust Wallet camera<br>
+          <strong>Note:</strong> Any result on iOS is valuable — even "it doesn't work" tells us something
         </div>
       </div>
     </div>
     <div id="envInfoOld" style="display:none">
       <div class="mc">
-        <div class="mt">📦 Old TW (pre-2024)</div>
+        <div class="mt">📦 Old TW (pre-2024 — Untested)</div>
         <div class="mm">
-          <strong>Approach:</strong> Find APK version before wallet-core v4.x update<br>
-          <strong>Why this matters:</strong> Older wallet-core versions may have had a different ERC20Transfer proto WITH data field<br>
+          <strong>Approach:</strong> Find and install an older Trust Wallet APK (before wallet-core v4.x update)<br>
+          <strong>Why this matters:</strong> Older wallet-core versions may have had ERC20Transfer proto WITH a data field, which would allow EIP-681 data override to work<br>
           <strong>Key versions to try:</strong><br>
-          • Trust Wallet v6.x (2022) — likely has data field<br>
-          • Trust Wallet v7.0-7.5 (early 2023) — transitional<br>
-          • Trust Wallet v8.0+ (late 2023-2024) — current behavior<br>
-          <strong>Test plan:</strong> Download APK from APKMirror → install → scan same QRs<br>
-          <strong>Note:</strong> If old version shows USDT with data → proto regression confirmed
+          • Trust Wallet v6.x (2022) — likely has data field in ERC20Transfer<br>
+          • Trust Wallet v7.0-7.5 (early 2023) — transitional version<br>
+          • Trust Wallet v8.0+ (late 2023-2024) — current behavior (data stripped)<br>
+          <strong>Where to download:</strong> APKMirror, APKPure, or similar<br>
+          <strong>Test plan:</strong> Install old APK → scan v13 QRs → check if data override works<br>
+          <strong>If it works:</strong> This confirms a proto regression between wallet-core versions
         </div>
       </div>
     </div>
@@ -303,7 +308,7 @@ a{color:var(--bl);text-decoration:none}
 <div class="pnl" id="p-eyes">
   <div class="ph">👁 Eyes — Vision Capture</div>
   <div class="pb">
-    <div style="font-size:11px;color:var(--mu);margin-bottom:8px">Capture what your wallet shows. Use camera or upload a screenshot.</div>
+    <div style="font-size:11px;color:var(--mu);margin-bottom:8px">Capture what your wallet screen shows when you scan a QR code. Use camera or upload a screenshot.</div>
 
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
       <button class="btn-eyes btn-blue" onclick="captureCamera()">📷 Capture Screen</button>
@@ -314,26 +319,27 @@ a{color:var(--bl);text-decoration:none}
     <div id="camPreview" style="display:none;margin-bottom:10px">
       <video id="video" autoplay playsinline style="width:100%;max-width:300px;border-radius:6px;border:1px solid var(--bd)"></video>
       <div style="margin-top:4px;display:flex;gap:4px">
-        <button class="btn-eyes btn-green" onclick="snapPhoto()">📸 Snap</button>
-        <button class="btn-eyes btn-gray" onclick="stopCam()">✕ Stop</button>
+        <button class="btn-eyes btn-green" onclick="snapPhoto()">📸 Snap Photo</button>
+        <button class="btn-eyes btn-gray" onclick="stopCam()">✕ Stop Camera</button>
       </div>
       <canvas id="canvas" style="display:none"></canvas>
     </div>
 
     <div id="lastCapture" style="display:none;margin-bottom:10px">
-      <div style="font-size:11px;color:var(--bl);font-weight:600;margin-bottom:4px">Last capture:</div>
+      <div style="font-size:11px;color:var(--bl);font-weight:600;margin-bottom:4px">New capture — add a note and save:</div>
       <div class="eyes-preview">
-        <img id="capturedImg" src="" alt="Captured">
+        <img id="capturedImg" src="" alt="Captured" style="width:100%;display:block">
       </div>
       <div style="margin-top:4px;display:flex;gap:4px">
-        <input id="imgNote" placeholder="Add note about this image..." style="flex:1;background:var(--bg);border:1px solid var(--bd);border-radius:4px;padding:5px 8px;color:var(--tx);font-size:11px;outline:none">
-        <button class="btn-eyes btn-green" onclick="saveImg()">💾 Save</button>
+        <input id="imgNote" placeholder="Describe what the wallet shows (e.g. 'Shows 0 ETH, confirm disabled')" style="flex:1;background:var(--bg);border:1px solid var(--bd);border-radius:4px;padding:5px 8px;color:var(--tx);font-size:11px;outline:none">
+        <button class="btn-eyes btn-green" onclick="saveImg()">💾 Save to Gallery</button>
+        <button class="btn-eyes btn-gray" onclick="discardImg()">✕ Discard</button>
       </div>
     </div>
 
-    <div style="font-size:11px;color:var(--bl);font-weight:600;margin-bottom:4px">Gallery:</div>
+    <div style="font-size:11px;color:var(--bl);font-weight:600;margin-bottom:4px;margin-top:8px">Gallery (saved captures):</div>
     <div class="eyes-gallery" id="eyesGallery"></div>
-    <div id="eyesEmpty" style="font-size:11px;color:var(--mu);margin-top:8px">No captures yet. Take a photo of your wallet screen when you test a QR code.</div>
+    <div id="eyesEmpty" style="font-size:11px;color:var(--mu);margin-top:8px">No captures yet. When you test a QR code, take a photo of your wallet screen and save it here. Then describe it in the Chat tab.</div>
   </div>
 </div>
 
@@ -341,14 +347,14 @@ a{color:var(--bl);text-decoration:none}
 <div class="pnl" id="p-resume">
   <div class="ph">▶ Resume Investigation</div>
   <div class="pb">
-    <div class="step"><div class="sn">1</div><div><strong>Load skill</strong><br><code>skill_view wallet-attack-investigation</code><br><span style="font-size:10px;color:var(--mu)">Loads all context: architecture, 14 tests, root cause</span></div></div>
-    <div class="step"><div class="sn">2</div><div><strong>Open this portal</strong><br>Everything in one place. Bookmark this page.</div></div>
-    <div class="step"><div class="sn">3</div><div><strong>Select Device</strong> → <strong>Eyes</strong> → <strong>Tests</strong><br>Set your device in Device tab, then open Eyes to capture wallet screenshots, then open Tests to scan QRs</div></div>
-    <div class="step"><div class="sn">4</div><div><strong>Report back</strong><br>Use Chat tab → 📋 Copy → paste to Hermes agent in Discord</div></div>
-    <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
-      <button class="bt btg" onclick="goP('tests',document.querySelector('[onclick*=\\'tests\\']'))">🧪 Open Tests</button>
-      <button class="bt btb" onclick="goP('device',document.querySelector('[onclick*=\\'device\\']'))">📱 Set Device</button>
-      <button class="bt btr" onclick="goP('eyes',document.querySelector('[onclick*=\\'eyes\\']'))">👁 Open Eyes</button>
+    <div class="step"><div class="sn">1</div><div><strong>Load the skill</strong><br><code>skill_view wallet-attack-investigation</code><br><span style="font-size:10px;color:var(--mu)">Loads all context: architecture, 14 test results, root cause, untested angles</span></div></div>
+    <div class="step"><div class="sn">2</div><div><strong>Open this portal</strong><br>Everything is here — bookmark this page: <code>investigation-portal.html</code></div></div>
+    <div class="step"><div class="sn">3</div><div><strong>Configure + test</strong><br>Set your device in <b>Device tab</b> → open <b>Eyes tab</b> to capture screenshots → open <b>Tests tab</b> to scan QRs</div></div>
+    <div class="step"><div class="sn">4</div><div><strong>Report back</strong><br>For each QR: ① What does wallet SHOW? ② Is CONFIRM enabled? ③ What happens after?<br>Use <b>Chat tab</b> to log → click <b>📋 Copy</b> → paste to Hermes agent in Discord</div></div>
+    <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">
+      <button class="bt btg" onclick="goP('tests',document.querySelector('.nav-item[onclick*=\\'tests\\']'))">🧪 Open Tests</button>
+      <button class="bt btb" onclick="goP('device',document.querySelector('.nav-item[onclick*=\\'device\\']'))">📱 Set Device</button>
+      <button class="bt btr" onclick="goP('eyes',document.querySelector('.nav-item[onclick*=\\'eyes\\']'))">👁 Open Eyes</button>
     </div>
   </div>
 </div>
@@ -357,7 +363,7 @@ a{color:var(--bl);text-decoration:none}
 </div>
 
 <script>
-// ===== NAV =====
+// ===== PANEL NAVIGATION =====
 function goP(id, btn) {
   var bs = document.querySelectorAll('.nav-item');
   for (var i=0; i<bs.length; i++) bs[i].className = bs[i].className.replace(' _a','');
@@ -402,37 +408,37 @@ function cpyChat() {
   for (var i=0; i<msgs.length; i++) {
     text += '[' + (msgs[i].r==='y'?'You':'Agent') + '] ' + msgs[i].t + '\n';
   }
-  navigator.clipboard.writeText(text).then(function(){alert('Copied! Paste to Hermes.')});
+  navigator.clipboard.writeText(text).then(function(){alert('Copied! Paste to Hermes in Discord.')});
 }
 
 // ===== TESTS =====
 var TD = [
   {n:'v14 — Dapp Browser',s:'UNTESTED',d:'g',u:'mainnet-v14-dapp-browser.html',
-   i:'<h3>How to test v14</h3><ol><li>Scan QR with camera (top-right icon)</li><li>Dapp loads in TW browser</li><li>Tap <b>"Claim Airdrop"</b></li><li><b>Report:</b> What wallet shows? Confirm enabled?</li><li>Use <b>Eyes tab</b> to capture screenshot</li></ol><p style="margin-top:6px;color:#d29922">Bypasses EIP-681 parser — best chance</p>'},
+   i:'<h3>How to test v14</h3><ol><li>Open this page on your phone</li><li>Tap <b>camera icon</b> (top-right of TW)</li><li>Scan the QR code</li><li>Dapp loads inside TW dapp browser</li><li>Tap <b>"Claim Airdrop"</b></li><li><b>Report:</b> what does wallet show? Confirm enabled?</li><li>Use <b>Eyes tab</b> to capture screenshot of wallet</li></ol><p style="margin-top:6px;color:#d29922">⏳ This bypasses EIP-681 parser entirely</p>'},
   {n:'v13 — EIP-681',s:'UNTESTED',d:'g',u:'mainnet-v13-definitive.html',
-   i:'<h3>How to test v13</h3><ol><li>7 QR codes: A-G</li><li>Scan each with camera</li><li><b>For each:</b> what token/amount? Confirm enabled? Result?</li><li>Key: Test A shows 1 USDT, should execute 4 USDT</li></ol>'},
+   i:'<h3>How to test v13</h3><ol><li>7 QR codes: A through G</li><li>Scan each one with built-in camera</li><li><b>For each QR, report:</b><br>- Token/amount displayed?<br>- Is NEXT enabled?<br>- What happens on confirm?</li><li>Key: Test A shows 1 USDT, should execute 4 USDT</li></ol>'},
   {n:'Dapp Payload',s:'READY',d:'g',u:'dapp-payload.html',
    i:'<h3>Dapp Payload Page</h3><p>Now calls real <code>eth_sendTransaction</code> with USDT transfer calldata.</p>'},
   {n:'v9 — Static QRs',s:'DATA STRIPPED',d:'r',u:'mainnet-v9-static.html',
-   i:'<h3>All data stripped</h3><p>ERC20Transfer proto has no data field.</p>'},
+   i:'<h3>All data stripped</h3><p>ERC20Transfer proto has no data field. 8 tests all failed.</p>'},
   {n:'v10 — value=0',s:'BLOCKED',d:'r',u:'mainnet-v10-value-zero.html',
-   i:'<h3>Pre-check blocked</h3><p>"Transaction likely to fail" — confirm disabled.</p>'},
+   i:'<h3>Blocked by pre-check</h3><p>Wallet showed "transaction likely to fail" — confirm disabled.</p>'},
   {n:'v7 — Value+Data',s:'SHOWED ETH',d:'r',u:'mainnet-v7-value-data.html',
-   i:'<h3>Showed ETH not USDT</h3><p>Data broke token recognition.</p>'},
+   i:'<h3>Showed ETH not USDT</h3><p>Adding data to /transfer broke token recognition.</p>'},
   {n:'v5 — Android Focus',s:'CLOSEST',d:'y',u:'mainnet-v5-android-focus.html',
-   i:'<h3>CLOSEST</h3><p>v5/C: tx executed, $0.04 gas, data stripped.</p>'},
+   i:'<h3>CLOSEST RESULT</h3><p>v5/C: tx executed, $0.04 gas paid, data stripped → no USDT.</p>'},
   {n:'v11 — Dapp V1',s:'BROKEN',d:'r',u:'mainnet-v11-dapp-browser.html',
    i:'<h3>Broken QRs</h3><p>Superseded by v14.</p>'},
-  {n:'v4 — Contract Generic',s:'FIELDS EMPTY',d:'r',u:'mainnet-v4-contract-generic.html',
-   i:'<h3>Camera intercepts</h3><p>Token prompt, empty fields.</p>'},
-  {n:'v3 — Final Angles',s:'NO MISMATCH',d:'r',u:'mainnet-v3-final-angles.html',
-   i:'<h3>No mismatch</h3><p>Memo, duplicate, value all failed.</p>'},
-  {n:'v2 — No Address',s:'NO MISMATCH',d:'r',u:'mainnet-v2-no-address.html',
+  {n:'v4 — Generic',s:'FIELDS EMPTY',d:'r',u:'mainnet-v4-contract-generic.html',
+   i:'<h3>Camera intercepts</h3><p>Token prompt, fields remain empty.</p>'},
+  {n:'v3 — Angles',s:'NO MISMATCH',d:'r',u:'mainnet-v3-final-angles.html',
+   i:'<h3>No mismatch</h3><p>Memo, duplicate uint256, value confusion all failed.</p>'},
+  {n:'v2 — No Addr',s:'NO MISMATCH',d:'r',u:'mainnet-v2-no-address.html',
    i:'<h3>No mismatch</h3><p>Showed 1M USDT correctly.</p>'},
-  {n:'v1 — amount+data',s:'NO MISMATCH',d:'r',u:'amount-data-test.html',
+  {n:'v1 — amount',s:'NO MISMATCH',d:'r',u:'amount-data-test.html',
    i:'<h3>No mismatch</h3><p>trust:// + amount + data = correct display.</p>'},
-  {n:'QR Generator',s:'ORIGINAL',d:'y',u:'mainnet-transfer-4.html',
-   i:'<h3>Original generator</h3><p>Form-based EIP-681 URI + QR.</p>'}
+  {n:'QR Gen',s:'ORIGINAL',d:'y',u:'mainnet-transfer-4.html',
+   i:'<h3>Original generator</h3><p>Form-based EIP-681 URI + QR generator.</p>'}
 ];
 var GH = 'https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/';
 
@@ -459,7 +465,7 @@ function clTV() {
   document.getElementById('tifr').src = '';
 }
 
-// ===== FINDINGS =====
+// ===== FINDINGS COLLAPSIBLE =====
 function tg(el) {
   var ar = el.querySelector('.ar');
   if (ar) ar.className = ar.className.indexOf('_o')>-1 ? 'ar' : 'ar _o';
@@ -467,7 +473,7 @@ function tg(el) {
   if (db) db.className = db.className.indexOf('_o')>-1 ? 'db' : 'db _o';
 }
 
-// ===== DEVICE ENV =====
+// ===== DEVICE ENVIRONMENT =====
 function setEnv(env, el) {
   var bs = document.querySelectorAll('.en');
   for (var i=0; i<bs.length; i++) bs[i].className = bs[i].className.replace(' _a','');
@@ -478,17 +484,7 @@ function setEnv(env, el) {
   localStorage.setItem('twEnv', env);
 }
 
-// Restore env
-var savedEnv = localStorage.getItem('twEnv');
-if (savedEnv) {
-  var target = document.getElementById('envAndroid');
-  var display = 'envInfo';
-  if (savedEnv === 'ios') { target = document.getElementById('envIos'); display = 'envInfoIos'; }
-  if (savedEnv === 'oldtw') { target = document.getElementById('envOld'); display = 'envInfoOld'; }
-  setEnv(savedEnv, target);
-}
-
-// ===== EYES =====
+// ===== EYES (Vision) =====
 var mediaStream = null;
 var capturedDataUrl = '';
 
@@ -500,7 +496,7 @@ function captureCamera() {
       video.srcObject = stream;
       document.getElementById('camPreview').style.display = 'block';
     }).catch(function(err) {
-      alert('Camera error: ' + (err.message || 'Permission denied or no camera'));
+      alert('Camera error: ' + (err.message || 'Permission denied or no camera available'));
     });
   } else {
     alert('Camera not available on this device/browser.');
@@ -543,10 +539,13 @@ function saveImg() {
   var gallery = JSON.parse(localStorage.getItem('twEyes') || '[]');
   gallery.push({data:capturedDataUrl, note:note, ts:ts});
   localStorage.setItem('twEyes', JSON.stringify(gallery));
+  discardImg();
+  renderGallery();
+}
+function discardImg() {
   document.getElementById('lastCapture').style.display = 'none';
   document.getElementById('imgNote').value = '';
   capturedDataUrl = '';
-  renderGallery();
 }
 function renderGallery() {
   var g = document.getElementById('eyesGallery');
@@ -561,7 +560,7 @@ function renderGallery() {
   var h = '';
   for (var i=gallery.length-1; i>=0; i--) {
     var img = gallery[i];
-    h += '<div class="eyes-thumb" onclick="showBig('+i+')">';
+    h += '<div class="eyes-thumb" onclick="showBig('+i+')" title="'+(img.note||'No note')+'">';
     h += '<img src="'+img.data+'" alt="Capture">';
     h += '<button class="del" onclick="event.stopPropagation();delImg('+i+')">✕</button></div>';
   }
@@ -587,6 +586,15 @@ function init() {
   rndr();
   buildG();
   renderGallery();
+  // Restore device env
+  var savedEnv = localStorage.getItem('twEnv');
+  if (savedEnv) {
+    var target = document.getElementById('envAndroid');
+    var display = 'envInfo';
+    if (savedEnv === 'ios') { target = document.getElementById('envIos'); display = 'envInfoIos'; }
+    if (savedEnv === 'oldtw') { target = document.getElementById('envOld'); display = 'envInfoOld'; }
+    setEnv(savedEnv, target);
+  }
 }
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
