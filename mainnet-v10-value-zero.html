@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TW v10 — value=0, raw ethereum: without /transfer</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f0f1a;color:#e0e0f0;padding:20px;max-width:900px;margin:0 auto}
+h1{font-size:20px;color:#f0f0ff;margin-bottom:4px}
+.sub{color:#8888bb;font-size:13px;margin-bottom:16px}
+.alert{background:#1a1a2a;border-left:3px solid #4444aa;font-size:12px;padding:8px 12px;border-radius:4px;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:650px){.grid{grid-template-columns:1fr}}
+.cell{background:#1a1a2e;border:1px solid #2a2a3a;border-radius:10px;padding:12px;text-align:center}
+.letter{font-size:28px;font-weight:bold;color:#bbbbff}
+.label{font-size:10px;color:#8888bb;margin-bottom:6px}
+.qr{width:160px;height:160px;border:2px solid #2a2a3a;border-radius:8px;background:#fff;padding:4px;margin:4px 0}
+.uri{font-size:8px;color:#aaccff;word-break:break-all;background:#0a0a15;padding:4px;border-radius:4px;margin:4px 0;font-family:monospace;text-align:left;max-height:60px;overflow:hidden}
+.pred{font-size:10px;padding:4px 6px;border-radius:4px;margin-top:4px;text-align:left}
+.pred.green{color:#88dd88;background:#1a2a1a}
+.pred.yellow{color:#dddd88;background:#2a2a1a}
+.pred.red{color:#dd8888;background:#2a1a1a}
+.result{width:100%;padding:6px;border-radius:4px;border:1px solid #3a3a5a;background:#0a0a15;color:#e0e0f0;font-size:11px;margin-top:4px;font-family:inherit;height:36px}
+</style>
+</head>
+<body>
+
+<h1>🔬 v10 — value=0 & Raw ethereum: URI</h1>
+<p class="sub">Built-in camera (top-right). Key question: does <code>value=0</code> enable the confirm button?</p>
+
+<div class="alert">
+<strong>⚡ From v9:</strong> value in wei parses correctly (A/B). But confirm disabled because USDT can't receive ETH. And when /transfer + data breaks erc20 routing, the <code>data</code> parameter is STRIPPED in the fallback (C/D/E/H). <strong>These tests try value=0 and raw ethereum: URI (no /transfer).</strong>
+</div>
+
+<div class="grid">
+
+<!-- A -->
+<div class="cell">
+<div class="letter">A</div>
+<div class="label">value=0 + data (no /transfer)</div>
+<img class="qr" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=ethereum%3A0xdAC17F958D2ee523a2206206994597C13D831ec7%401%3Fvalue%3D0%26data%3D0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000000000000000000000000000000000000003d0900" alt="A" loading="lazy">
+<div class="uri">ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1?value=0&data=0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000000000000000000000000000000000000003d0900</div>
+<div class="pred green">🎯 value=0 explicitly → wallet shows "0 ETH + Contract Interaction". No "will fail" warning (no ETH to reject). Confirm ENABLED. Data passes through → 4 USDT transfers!</div>
+<input class="result" placeholder="Shows 0 ETH? Confirm enabled? USDT result?" id="rA">
+</div>
+
+<!-- B -->
+<div class="cell">
+<div class="letter">B</div>
+<div class="label">value=1 wei + data (no /transfer)</div>
+<img class="qr" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=ethereum%3A0xdAC17F958D2ee523a2206206994597C13D831ec7%401%3Fvalue%3D1%26data%3D0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000000000000000000000000000000000000003d0900" alt="B" loading="lazy">
+<div class="uri">ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1?value=1&data=0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000000000000000000000000000000000000003d0900</div>
+<div class="pred yellow">🎯 value=1 wei (minimum non-zero). Wallet shows "1 wei ETH + Contract Interaction". Might say "will fail" or might allow confirm. Tests if tiny value bypasses the block.</div>
+<input class="result" placeholder="Shows 1 wei? Confirmable? Result?" id="rB">
+</div>
+
+<!-- C -->
+<div class="cell">
+<div class="letter">C</div>
+<div class="label">value=0 + data, but via trust:// format (no asset)</div>
+<img class="qr" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=trust%3A%2F%2Fsend%3Faddress%3D0xdAC17F958D2ee523a2206206994597C13D831ec7%26amount%3D0%26data%3D0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000000000000000000000000000000000000003d0900" alt="C" loading="lazy">
+<div class="uri">trust://send?address=0xdAC17F958D2ee523a2206206994597C13D831ec7&amount=0&data=0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000000000000000000000000000000000000003d0900</div>
+<div class="pred green">🎯 trust:// with address=USDT, amount=0, data=... No asset → contract_generic. Shows "0 ETH to USDT". Amount=0 passes minimum check. Confirm enabled? Data through?</div>
+<input class="result" placeholder="Shows? Tokey picker? 0 ETH?" id="rC">
+</div>
+
+<!-- D -->
+<div class="cell">
+<div class="letter">D</div>
+<div class="label">ethereum:0xUSDT (no /transfer) with only data, no value</div>
+<img class="qr" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=ethereum%3A0xdAC17F958D2ee523a2206206994597C13D831ec7%401%3Fdata%3D0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000000000000000000000000000000000000003d0900" alt="D" loading="lazy">
+<div class="uri">ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1?data=0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000000000000000000000000000000000000003d0900</div>
+<div class="pred yellow">🎯 No value at all, no /transfer, just data. Pure contract_generic with data only. If confirm is enabled (might be different from v9/A which had /transfer+data+params), data passes through.</div>
+<input class="result" placeholder="Shows? Confirmable?" id="rD">
+</div>
+
+<!-- E -->
+<div class="cell">
+<div class="letter">E</div>
+<div class="label">trust:// with asset, amount=1, data (Send flow test)</div>
+<img class="qr" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=trust%3A%2F%2Fsend%3Fasset%3D0xdAC17F958D2ee523a2206206994597C13D831ec7%26address%3D0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266%26amount%3D1%26data%3D0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000000000000000000000000000000000000003d0900" alt="E" loading="lazy">
+<div class="uri">trust://send?asset=0xdAC17F958D2ee523a2206206994597C13D831ec7&address=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266&amount=1&data=0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000000000000000000000000000000000000003d0900</div>
+<div class="pred red">🎯 Control: trust:// with asset + amount + data. Camera path should drop asset → token picker. If you scan from SEND FLOW instead of camera, might show 0.000001 USDT and execute only that (erc20_transfer).</div>
+<input class="result" placeholder="Camera or Send flow result?" id="rE">
+</div>
+
+<!-- F -->
+<div class="cell">
+<div class="letter">F</div>
+<div class="label">ethereum:USDT@1?value=0&uint256=1000000 (no data, no /transfer)</div>
+<img class="qr" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=ethereum%3A0xdAC17F958D2ee523a2206206994597C13D831ec7%401%3Fvalue%3D0%26uint256%3D1000000" alt="F" loading="lazy">
+<div class="uri">ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1?value=0&uint256=1000000</div>
+<div class="pred yellow">🎯 Control: value=0, uint256=1000000, no data, no /transfer. Shows? Generic interaction vs token context?</div>
+<input class="result" placeholder="Shows 0 ETH? 0 USDT?" id="rF">
+</div>
+
+</div>
+
+</body>
+</html>
