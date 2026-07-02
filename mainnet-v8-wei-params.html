@@ -77,7 +77,7 @@ const TESTS = [
   { id: 'F',
     desc: 'trust://send?asset=USDT&address=RCP ONLY data (NO amount)',
     uri: 'trust://send?asset=' + USDT + '&address=' + RCP + '&data=' + ABI,
-    pred: 'Camera path → token picker again. But maybe with data it's different? (Previous showed empty fields)'
+    pred: 'Camera path → token picker again. But maybe with data the parsing is different? (Previous showed empty fields)'
   },
   { id: 'G',
     desc: 'ethereum:0xUSDT@1?uint256=4000000&data=' + ABI.slice(0,20) + '...',
