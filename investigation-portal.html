@@ -261,43 +261,37 @@ a{color:var(--bl);text-decoration:none}
     </div>
     <div id="envInfo" style="margin-top:8px">
       <div class="mc">
-        <div class="mt">📱 Android (Current — 14 test rounds completed)</div>
+        <div class="mt">📱 Android Selected — Agent Will:</div>
         <div class="mm">
-          <strong>Approach:</strong> Built-in camera → scan QR → dapp browser → click "Claim Airdrop" button<br>
-          <strong>Test priority:</strong> 1. v14 Dapp Browser → 2. v13 EIP-681 → 3. Older TW version<br>
-          <strong>Key behavior:</strong> EIP-681 data param is always stripped. ERC20Transfer proto has no data field.<br>
-          <strong>Camera button:</strong> Top-right icon (QR code) in Trust Wallet main screen<br>
-          <strong>Best angle:</strong> v14 Dapp Browser — uses <code>trust://browser?url=...</code> which bypasses the EIP-681 parser entirely
+          <strong>1. Guide v14 Dapp Browser test</strong> — this bypasses EIP-681 parser<br>
+          <strong>2. If v14 fails:</strong> analyze wallet-core source for Android-specific WebView behavior<br>
+          <strong>3. Generate alternate QR formats</strong> tailored to Android URI handling<br>
+          <strong>4. Check for TW Android APK versions</strong> that may handle data differently<br><br>
+          <span style="font-size:10px;color:var(--dim)">→ Test: scan v14 QR → tap "Claim" → report what wallet shows</span>
         </div>
       </div>
     </div>
     <div id="envInfoIos" style="display:none">
       <div class="mc">
-        <div class="mt">🍎 iOS (Completely Untested)</div>
+        <div class="mt">🍎 iOS Selected — Agent Will:</div>
         <div class="mm">
-          <strong>Approach:</strong> iOS Trust Wallet may handle EIP-681 URIs differently from Android<br>
-          <strong>Expected differences:</strong><br>
-          • Uses WKWebView instead of Android WebView — different JS injection behavior<br>
-          • URL scheme handling (trust:// vs ethereum:) may route differently<br>
-          • dapp browser may have different restrictions on eth_sendTransaction<br>
-          <strong>Test plan:</strong> Same v14 QR approach — scan with iOS Trust Wallet camera<br>
-          <strong>Note:</strong> Any result on iOS is valuable — even "it doesn't work" tells us something
+          <strong>1. Research iOS EIP-681 handling</strong> — iOS uses WKWebView, may route URIs differently<br>
+          <strong>2. Adapt QR for iOS</strong> — iOS may require different URL schemes or formatting<br>
+          <strong>3. Check for iOS-specific wallet-core differences</strong> in EIP681Parser.swift<br>
+          <strong>4. Generate iOS-specific test pages</strong> if Android approach fails<br><br>
+          <span style="font-size:10px;color:var(--dim)">→ Test: scan same v14 QR with iOS TW camera → report differences</span>
         </div>
       </div>
     </div>
     <div id="envInfoOld" style="display:none">
       <div class="mc">
-        <div class="mt">📦 Old TW (pre-2024 — Untested)</div>
+        <div class="mt">📦 Old TW (pre-2024) Selected — Agent Will:</div>
         <div class="mm">
-          <strong>Approach:</strong> Find and install an older Trust Wallet APK (before wallet-core v4.x update)<br>
-          <strong>Why this matters:</strong> Older wallet-core versions may have had ERC20Transfer proto WITH a data field, which would allow EIP-681 data override to work<br>
-          <strong>Key versions to try:</strong><br>
-          • Trust Wallet v6.x (2022) — likely has data field in ERC20Transfer<br>
-          • Trust Wallet v7.0-7.5 (early 2023) — transitional version<br>
-          • Trust Wallet v8.0+ (late 2023-2024) — current behavior (data stripped)<br>
-          <strong>Where to download:</strong> APKMirror, APKPure, or similar<br>
-          <strong>Test plan:</strong> Install old APK → scan v13 QRs → check if data override works<br>
-          <strong>If it works:</strong> This confirms a proto regression between wallet-core versions
+          <strong>1. Research wallet-core proto history</strong> — find when ERC20Transfer lost its data field<br>
+          <strong>2. Find & link old APK versions</strong> — v6.x (2022) likely had data field<br>
+          <strong>3. Analyze git history of tx_builder.rs</strong> — identify the exact commit that removed data<br>
+          <strong>4. Generate test pages compatible with old version</strong> — EIP-681 data override may work<br><br>
+          <span style="font-size:10px;color:var(--dim)">→ I will research and provide old APK links + analysis</span>
         </div>
       </div>
     </div>
@@ -404,11 +398,13 @@ function snd() {
 function cpyChat() {
   var raw = localStorage.getItem('twC');
   var msgs = raw ? JSON.parse(raw) : [];
-  var text = '';
+  var env = localStorage.getItem('twEnv') || 'android';
+  var envName = {android:'Android (current)', ios:'iOS', oldtw:'Old TW (pre-2024)'}[env] || 'Android';
+  var text = '=== DEVICE ENVIRONMENT: ' + envName + ' ===\n';
   for (var i=0; i<msgs.length; i++) {
     text += '[' + (msgs[i].r==='y'?'You':'Agent') + '] ' + msgs[i].t + '\n';
   }
-  navigator.clipboard.writeText(text).then(function(){alert('Copied! Paste to Hermes in Discord.')});
+  navigator.clipboard.writeText(text).then(function(){alert('Copied! Device: '+envName+' — Paste to Hermes.')});
 }
 
 // ===== TESTS =====
